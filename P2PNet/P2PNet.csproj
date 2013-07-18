@@ -1,0 +1,79 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{4F5330BB-6BE3-48A2-903D-A492BE05B2AB}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>P2PNet</RootNamespace>
+    <AssemblyName>P2PNet</AssemblyName>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <RunCodeAnalysis>true</RunCodeAnalysis>
+    <CodeAnalysisRuleSet>BasicDesignGuidelineRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.ServiceModel" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="BufferManager\BuddyBufferAllocator.cs" />
+    <Compile Include="BufferManager\BufferAllocator.cs" />
+    <Compile Include="Connection.cs" />
+    <Compile Include="ConnectionBundle.cs" />
+    <Compile Include="ConnectionIOManager.cs" />
+    <Compile Include="ConnectionStat.cs" />
+    <Compile Include="EndlessWorker.cs" />
+    <Compile Include="EventArgs\ConnectionEventArgs.cs" />
+    <Compile Include="ConnectionsManager.cs" />
+    <Compile Include="EventArgs\DataArriveEventArgs.cs" />
+    <Compile Include="GlobalSuppressions.cs" />
+    <Compile Include="Protocols\EchoProtocol.cs" />
+    <Compile Include="Protocols\IProtocol.cs" />
+    <Compile Include="ReceiveJobState.cs" />
+    <Compile Include="Utils\Events.cs" />
+    <Compile Include="BufferManager\IBufferAllocator.cs" />
+    <Compile Include="Peer.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Protocols\BasicProtocol.cs" />
+    <Compile Include="Protocols\IPacketHandler.cs" />
+    <Compile Include="Protocols\RawPacketHandler.cs" />
+    <Compile Include="Protocols\PacketReceivedEventArgs.cs" />
+    <Compile Include="BufferManager\Buffer.cs" />
+    <Compile Include="Listener.cs" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
