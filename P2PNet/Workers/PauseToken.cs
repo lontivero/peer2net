@@ -1,5 +1,5 @@
 //
-// - IBufferAllocator.cs
+// - PauseToken.cs
 // 
 // Author:
 //     Lucas Ontivero <lucasontivero@gmail.com>
@@ -21,11 +21,20 @@
 
 // <summary></summary>
 
-namespace P2PNet.BufferManager
+using System.Threading.Tasks;
+
+namespace P2PNet.Workers
 {
-    public interface IBufferAllocator
+    public struct PauseToken
     {
-        Buffer Allocate(int size);
-        void Free(Buffer segments);
+        private readonly PauseTokenSource _source;
+        internal PauseToken(PauseTokenSource source) { _source = source; }
+
+        public bool IsPaused { get { return _source != null && _source.IsPaused; } }
+
+        public Task WaitWhilePausedAsync()
+        {
+            return IsPaused ? _source.WaitWhilePausedAsync() : PauseTokenSource.CompletedTask;
+        }
     }
 }

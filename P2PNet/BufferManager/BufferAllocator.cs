@@ -37,23 +37,19 @@ namespace P2PNet.BufferManager
             _allocator = BuddyBufferAllocator.Create(SizeToBlocks(buffer.Length));
         }
 
-        #region IBufferAllocator Members
-
         public Buffer Allocate(int size)
         {
             var offset = _allocator.Allocate(SizeToBlocks(size));
-            return new Buffer {new ArraySegment<byte>(_buffer, offset, size)};
+            return new Buffer {new ArraySegment<byte>(_buffer, offset * BlockSize, size)};
         }
 
         public void Free(Buffer segments)
         {
             foreach (var segment in segments)
             {
-                _allocator.Free(segment.Offset);
+                _allocator.Free(segment.Offset / BlockSize);
             }
         }
-
-        #endregion
 
         private static int SizeToBlocks(int size)
         {

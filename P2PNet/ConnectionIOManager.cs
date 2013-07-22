@@ -21,11 +21,15 @@
 
 // <summary></summary>
 
+using System;
+using P2PNet.Workers;
+
 namespace P2PNet
 {
     internal class ConnectionIoActor
     {
         private readonly EndlessWorker<ReceiveJobState> _worker;
+        private readonly Random r = new Random();
 
         public ConnectionIoActor()
         {
@@ -36,7 +40,7 @@ namespace P2PNet
         {
             const bool canReceive = true;
 
-            if (canReceive)
+            if (r.Next(10) > 7)
             {
                 jobState.Connection.Receive();
             }

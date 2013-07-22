@@ -70,9 +70,9 @@ namespace P2PNet
                             if (task.IsFaulted) return;
                             ListenForConnections();
 
-                            Socket newSocket = task.Result;
+                            var newSocket = task.Result;
                             RaiseClientConnectedEvent(new ConnectionEventArgs(newSocket));
-                        });
+                        }, TaskContinuationOptions.OnlyOnRanToCompletion);
             }
             catch (ObjectDisposedException)
             {

@@ -24,6 +24,7 @@
 using System;
 using System.Net.Sockets;
 using System.Threading.Tasks;
+using P2PNet.BufferManager;
 using P2PNet.EventArgs;
 using P2PNet.Utils;
 using Buffer = P2PNet.BufferManager.Buffer;
@@ -33,17 +34,16 @@ namespace P2PNet
     public class Connection
     {
         private readonly Socket _socket;
+        private readonly IBufferAllocator _allocator;
 
-        public Connection(Guid uid, Socket socket, Buffer buffer)
+        public Connection(Guid uid, Socket socket, IBufferAllocator allocator)
         {
             Uid = uid;
             _socket = socket;
-            Buffer = buffer;
+            _allocator = allocator;
         }
 
         public Guid Uid { get; private set; }
-
-        internal Buffer Buffer { get; private set; }
 
         public event EventHandler<DataArrivedEventArgs> DataArrived;
         public event EventHandler<System.EventArgs> ClosedEvent;
@@ -55,8 +55,9 @@ namespace P2PNet
 
         internal void Receive()
         {
+            var buffer = _allocator.Allocate(128);
             Func<AsyncCallback, object, IAsyncResult> beginReceive =
-                (callback, s) => _socket.BeginReceive(Buffer, SocketFlags.None, callback, s);
+                (callback, s) => _socket.BeginReceive(buffer, SocketFlags.None, callback, s);
 
             //Task<int> task = Task.Factory.FromAsync<int>(begin, _stream.EndRead, null);
             //task.ContinueWith(t => callback(t.Result), TaskContinuationOptions.NotOnFaulted)
@@ -71,13 +72,14 @@ namespace P2PNet
                         if (bytesRead > 0)
                         {
                             var data = new byte[bytesRead];
-                            Buffer.CopyTo(data);
+                            buffer.CopyTo(data);
                             RaiseDataArrivedEvent(new DataArrivedEventArgs(Uid, data));
                         }
                         else
                         {
                             Close();
                         }
+                        _allocator.Free(buffer);
                     });
         }
 

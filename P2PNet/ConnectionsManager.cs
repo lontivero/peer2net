@@ -22,6 +22,7 @@
 // <summary></summary>
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using P2PNet.BufferManager;
@@ -34,18 +35,19 @@ namespace P2PNet
     public class ConnectionsManager
     {
         private readonly IBufferAllocator _allocator;
-        private readonly Dictionary<Guid, ConnectionBundle> _connectionBundles;
+        private readonly ConcurrentDictionary<Guid, ConnectionBundle> _connectionBundles;
         private readonly ConnectionIoActor _ioActor;
         private readonly Listener _listener;
 
         public ConnectionsManager(Listener listener)
         {
             _listener = listener;
-            _listener.ClientConnected += ClientConnected;
 
             _ioActor = new ConnectionIoActor();
-            _connectionBundles = new Dictionary<Guid, ConnectionBundle>();
+            _connectionBundles = new ConcurrentDictionary<Guid, ConnectionBundle>();
             _allocator = new BufferAllocator(new byte[4*1024*1024]);
+
+            _listener.ClientConnected += ClientConnected;
         }
 
         public event EventHandler<PacketReceivedEventArgs> MessageReceived;
@@ -53,21 +55,20 @@ namespace P2PNet
         private void ClientConnected(object sender, ConnectionEventArgs e)
         {
             var uid = Guid.NewGuid();
-            var buffer = _allocator.Allocate(8*1024);
-            var connection = new Connection(uid, e.Socket, buffer);
+            var connection = new Connection(uid, e.Socket, _allocator);
             var packetHandler = new RawPacketHandler();
 
-            packetHandler.PacketReceived += (s, o) => PacketReceived(uid, o);
-
-            connection.DataArrived += DataArrived;
-            _ioActor.EnqueueReceive(connection);
-
-            _connectionBundles.Add(uid, new ConnectionBundle
+            _connectionBundles.TryAdd(uid, new ConnectionBundle
                 {
                     Connection = connection,
                     PacketHandler = packetHandler,
                     Statistics = new ConnectionStat()
                 });
+
+            connection.DataArrived += DataArrived;
+            packetHandler.PacketReceived += (s, o) => PacketReceived(uid, o);
+
+            _ioActor.EnqueueReceive(connection);
         }
 
         private void PacketReceived(Guid connectionUid, PacketReceivedEventArgs e)

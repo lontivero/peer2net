@@ -72,16 +72,14 @@ namespace P2PNet.Protocols
 
         public void ProcessIncomingData(byte[] data)
         {
-//            Task.Factory.StartNew(() =>{
             _completed = false;
             int length = data.Length;
             for (_currentByteIndex = 0; _currentByteIndex < length && !_completed; _currentByteIndex++)
             {
                 byte currentByte = data[_currentByteIndex];
-                Action<byte> handler = _handlers[_status];
+                var handler = _handlers[_status];
                 handler(currentByte);
             }
-//            });
         }
 
         #endregion

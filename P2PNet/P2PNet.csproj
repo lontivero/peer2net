@@ -49,11 +49,13 @@
     <Compile Include="ConnectionBundle.cs" />
     <Compile Include="ConnectionIOManager.cs" />
     <Compile Include="ConnectionStat.cs" />
-    <Compile Include="EndlessWorker.cs" />
+    <Compile Include="Workers\EndlessWorker.cs" />
     <Compile Include="EventArgs\ConnectionEventArgs.cs" />
     <Compile Include="ConnectionsManager.cs" />
     <Compile Include="EventArgs\DataArriveEventArgs.cs" />
     <Compile Include="GlobalSuppressions.cs" />
+    <Compile Include="Workers\PauseToken.cs" />
+    <Compile Include="Workers\PauseTokenSource.cs" />
     <Compile Include="Protocols\EchoProtocol.cs" />
     <Compile Include="Protocols\IProtocol.cs" />
     <Compile Include="ReceiveJobState.cs" />
