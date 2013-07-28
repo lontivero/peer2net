@@ -22,37 +22,67 @@
 // <summary></summary>
 
 using System;
+using System.Collections.Concurrent;
+using P2PNet.Progress;
 using P2PNet.Workers;
 
 namespace P2PNet
 {
     internal class ConnectionIoActor
     {
-        private readonly EndlessWorker<ReceiveJobState> _worker;
-        private readonly Random r = new Random();
+        private readonly TimedWorker _worker;
+        private readonly BlockingCollection<IOState> _sendQueue;
+        private readonly BlockingCollection<IOState> _receiveQueue;
 
-        public ConnectionIoActor()
+        public ConnectionIoActor(TimedWorker timedWorker)
         {
-            _worker = new EndlessWorker<ReceiveJobState>(Receive);
+            _sendQueue = new BlockingCollection<IOState>();
+            _receiveQueue = new BlockingCollection<IOState>();
+            _worker = timedWorker;
+            _worker.Queue(TimeSpan.FromMilliseconds(100), SendEnqueued);
+            _worker.Queue(TimeSpan.FromMilliseconds(100), ReceiveEnqueued);
         }
 
-        private void Receive(ReceiveJobState jobState)
+        private void ReceiveEnqueued()
         {
-            const bool canReceive = true;
-
-            if (r.Next(10) > 7)
+            foreach (var ioState in _receiveQueue.GetConsumingEnumerable())
             {
-                jobState.Connection.Receive();
-            }
-            else
-            {
-                _worker.Enqueue(jobState);
+                Receive(ioState);
             }
         }
 
-        public void EnqueueReceive(Connection connection)
+        private void SendEnqueued()
         {
-            Receive(new ReceiveJobState(connection));
+            foreach (var ioState in _sendQueue.GetConsumingEnumerable())
+            {
+                Send(ioState);
+            }
+        }
+
+        private void Send(IOState state)
+        {
+            if (!state.Connection.TryReceive(state.Bytes, state.BandwidthController))
+            {
+                _sendQueue.Add(state);
+            }
+        }
+
+        private void Receive(IOState state)
+        {
+            if (!state.Connection.TryReceive(state.Bytes, state.BandwidthController))
+            {
+                _receiveQueue.Add(state);
+            }
+        }
+
+        public void EnqueueSend(int bytes, Connection connection, BandwidthController bandwidthController)
+        {
+            Send(IOState.Create(bytes, connection, bandwidthController));
+        }
+
+        public void EnqueueReceive(int bytes, Connection connection, BandwidthController bandwidthController)
+        {
+            Receive(IOState.Create(bytes, connection, bandwidthController));
         }
     }
 }

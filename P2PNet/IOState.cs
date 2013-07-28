@@ -21,20 +21,41 @@
 
 // <summary></summary>
 
+using P2PNet.Progress;
+
 namespace P2PNet
 {
-    internal class ReceiveJobState
+    internal class IOState
     {
         private readonly Connection _connection;
+        private readonly BandwidthController _bandwidthController;
+        private readonly int _bytes;
 
-        public ReceiveJobState(Connection connection)
+        private IOState(int bytes, Connection connection, BandwidthController bandwidthController)
         {
+            _bytes = bytes;
             _connection = connection;
+            _bandwidthController = bandwidthController;
         }
 
         public Connection Connection
         {
             get { return _connection; }
+        }
+
+        public BandwidthController BandwidthController
+        {
+            get { return _bandwidthController; }
+        }
+
+        public int Bytes
+        {
+            get { return _bytes; }
+        }
+
+        public static IOState Create(int bytes, Connection connection, BandwidthController bandwidthController)
+        {
+            return new IOState(bytes, connection, bandwidthController);
         }
     }
 }

@@ -38,7 +38,9 @@ namespace P2PNet.Protocols
         private int _packetLength;
         private int _packetLengthOffset;
         private PacketStatus _status;
+        private int _pendingBytes;
 
+        public event EventHandler<PacketReceivedEventArgs> PacketReceived;
 
         public RawPacketHandler()
         {
@@ -59,15 +61,18 @@ namespace P2PNet.Protocols
                     {PacketStatus.ReceivingData, AcceptData},
                     {PacketStatus.Unsynchronized, b => Expect(FirstHeaderByte, b, PacketStatus.FirstHeaderReceived)}
                 };
+
+            _pendingBytes = 7;
         }
-
-        #region IPacketHandler Members
-
-        public event EventHandler<PacketReceivedEventArgs> PacketReceived;
 
         public bool IsWaiting
         {
             get { return !_completed; }
+        }
+
+        public int PendingBytes
+        {
+            get { return _pendingBytes; }
         }
 
         public void ProcessIncomingData(byte[] data)
@@ -82,8 +87,6 @@ namespace P2PNet.Protocols
             }
         }
 
-        #endregion
-
         private void AcceptPacketLength(byte b)
         {
             const int sizeOfInt32 = sizeof (int);
@@ -94,9 +97,17 @@ namespace P2PNet.Protocols
                           ? PacketStatus.ReceivingPacketLength
                           : PacketStatus.ReceivingData;
 
-            if (_status == PacketStatus.ReceivingData && _packetLength == 0)
+            _pendingBytes--;
+            if (_status == PacketStatus.ReceivingData)
             {
-                EndProcessingData(new byte[0]);
+                if (_packetLength == 0)
+                {
+                    EndProcessingData(new byte[0]);
+                }
+                else
+                {
+                    _pendingBytes = _packetLength;
+                }
             }
         }
 
@@ -104,6 +115,7 @@ namespace P2PNet.Protocols
         {
             _packet.Add(b);
             int receivedByteCount = _packet.Count;
+            _pendingBytes--;
             if (receivedByteCount == _packetLength)
             {
                 var packetData = new byte[_packet.Count];
@@ -120,6 +132,10 @@ namespace P2PNet.Protocols
             if (previousStatus != PacketStatus.Unsynchronized && _status == PacketStatus.Unsynchronized)
             {
                 _currentByteIndex--;
+            }
+            else
+            {
+                _pendingBytes--;
             }
         }
 
@@ -139,6 +155,7 @@ namespace P2PNet.Protocols
             _packetLength = 0;
             _packetLengthOffset = 0;
             _status = PacketStatus.Empty;
+            _pendingBytes = 7;
             _completed = true;
         }
 

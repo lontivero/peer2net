@@ -46,9 +46,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BandwidthControllerTests.cs" />
     <Compile Include="BufferAllocatorTests.cs" />
     <Compile Include="LoadTest.cs" />
     <Compile Include="PacketHandlerTests.cs" />
+    <Compile Include="PidControllerTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

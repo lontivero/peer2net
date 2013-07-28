@@ -38,7 +38,7 @@ namespace P2PNet.Tests
         }
 
         [Test]
-        public void Emptpy_Packet_Data()
+        public void EmptyPacketData()
         {
             var passed = false;
             var data = new byte[] { 0x12, 0x34, 0x89, 0x0, 0x0, 0x0, 0x00 };
@@ -49,7 +49,7 @@ namespace P2PNet.Tests
         }
 
         [Test]
-        public void Perfectly_Completed_Well_Formed_Data()
+        public void PerfectlyCompletedWellFormedData()
         {
             var passed = false;
             var data = new byte[] {0x12, 0x34, 0x89, 0x0, 0x0, 0x0, 0x02, 0x48, 0x49};
@@ -60,7 +60,7 @@ namespace P2PNet.Tests
         }
 
         [Test]
-        public void Perfectly_Completed_Well_Formed_Data_Two_Parts()
+        public void PerfectlyCompletedWellFormedDataTwoParts()
         {
             var passed = false;
             var data1 = new byte[] { 0x12, 0x34, 0x89, 0x0 };
@@ -73,7 +73,7 @@ namespace P2PNet.Tests
         }
 
         [Test]
-        public void Completed_Well_Formed_Larger_Data()
+        public void CompletedWellFormedLargerData()
         {
             bool passed = false;
             var data1 = new byte[] { 0x12, 0x34, 0x89, 0x0, 0x0, 0x0, 0x02, 0x48, 0x49, 0x12, 0x36 };
@@ -84,7 +84,7 @@ namespace P2PNet.Tests
         }
 
         [Test]
-        public void Bad_Formed_Packets_Header()
+        public void BadFormedPacketsHeader()
         {
             var passed = false;
             var data1 = new byte[] { 0x12, 0xff, 0x34, 0xff, 0x89, 0x0, 0x0, 0x0, 0x02, 0x48, 0x49 };

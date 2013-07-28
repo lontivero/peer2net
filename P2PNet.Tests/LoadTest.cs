@@ -35,15 +35,17 @@ namespace P2PNet.Tests
     public class LoadTest
     {
         private Listener _listener;
-        private ConnectionsManager _manager;
+        private ConnectionsManager _connectionManager;
+        private ComunicationManager _comunicationManager;
         private Socket[] _sockets;
 
         [SetUp]
         public void Setup()
         {
             _listener = new Listener(8000);
-            _manager = new ConnectionsManager(_listener);
-            _sockets = new Socket[300];
+            _connectionManager = new ConnectionsManager(_listener);
+            _comunicationManager = new ComunicationManager(_connectionManager);
+            _sockets = new Socket[100];
             _listener.Start();
         }
 
@@ -51,7 +53,7 @@ namespace P2PNet.Tests
         public void DoIt()
         {
             var receiveMessages = new List<int>();
-            _manager.MessageReceived += (o, e) =>
+            _comunicationManager.MessageReceived += (o, e) =>
                 {
                     lock (receiveMessages)
                     {
@@ -67,11 +69,11 @@ namespace P2PNet.Tests
                 _sockets[i].Connect("127.0.0.1", 8000);
             }
 
-            foreach (var sm in _sockets.Select((s, i) => new { Socket = s, Message = messages[i]}))
+            foreach (var sm in _sockets.Select((s, i) => new { Socket = s, Message = messages[i] }))
             {
                 sm.Socket.BeginSend(sm.Message, 0, sm.Message.Length, SocketFlags.None, null, sm.Socket);
             }
-            Thread.Sleep(100);
+            Thread.Sleep(10000);
 
             var duplicates = receiveMessages.GroupBy(i => i)
               .Where(g => g.Count() > 1)

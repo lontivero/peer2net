@@ -37,7 +37,7 @@ namespace P2PNet.Protocols
         public BasicProtocol(Listener server)
         {
             _server = server;
-            _server.ClientConnected += ServerOnClientConnected;
+            _server.ConnectionRequested += ServerOnClientConnected;
             _packetHandlers = new List<IPacketHandler>();
         }
 

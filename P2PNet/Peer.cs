@@ -1,5 +1,5 @@
 //
-// - Peer.cs
+// - ConnectionBundle.cs
 // 
 // Author:
 //     Lucas Ontivero <lucasontivero@gmail.com>
@@ -22,24 +22,74 @@
 // <summary></summary>
 
 using System;
+using P2PNet.BufferManager;
+using P2PNet.Progress;
+using P2PNet.Protocols;
 
 namespace P2PNet
 {
     public class Peer
     {
-        internal Connection Connection { get; private set; }
+        private readonly Guid _peerId;
+        private readonly Connection _connection;
+        private readonly IPacketHandler _packetHandler;
+        private readonly PeerStat _statistics;
+        private readonly BandwidthController _receiveBandwidthController;
+        private readonly BandwidthController _sendBandwidthController;
+        private readonly SpeedWatcher _speedWatcher;
+        private readonly SpeedWatcher _sendSpeedWatcher;
+        private readonly SpeedWatcher _receiveSpeedWatcher;
 
-        internal Peer(Connection connection)
+        internal Guid Id
         {
-            Guid = Guid.NewGuid();
-            Connection = connection;
+            get { return _peerId; }
         }
 
-        public Guid Guid { get; private set; }
-
-        internal void Close()
+        internal Connection Connection
         {
-            Connection.Close();
+            get { return _connection; }
+        }
+
+        internal IPacketHandler PacketHandler
+        {
+            get { return _packetHandler; }
+        }
+
+        internal PeerStat Statistics
+        {
+            get { return _statistics; }
+        }
+
+        internal BandwidthController ReceiveBandwidthController
+        {
+            get { return _receiveBandwidthController; }
+        }
+
+        internal BandwidthController SendBandwidthController
+        {
+            get { return _sendBandwidthController; }
+        }
+
+        internal SpeedWatcher SendSpeedWatcher
+        {
+            get { return _sendSpeedWatcher; }
+        }
+
+        internal SpeedWatcher ReceiveSpeedWatcher
+        {
+            get { return _sendSpeedWatcher; }
+        }
+
+        public Peer(Connection connection, IPacketHandler packetHandler)
+        {
+            _peerId = connection.Uid;
+            _connection = connection;
+            _packetHandler = packetHandler;
+            _sendSpeedWatcher = new SpeedWatcher();
+            _receiveSpeedWatcher = new SpeedWatcher();
+            _receiveBandwidthController = new BandwidthController();
+            _sendBandwidthController = new BandwidthController();
+            _statistics = new PeerStat();
         }
     }
 }

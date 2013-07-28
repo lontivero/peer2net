@@ -55,7 +55,7 @@ namespace P2PNet.Console
                 _listener = new Listener(port);
                 _listener.Start();
                 _man = new ConnectionsManager(_listener);
-                _man.MessageReceived += ManOnPacketReceived;
+//                _man.MessageReceived += ManOnPacketReceived;
                 UpdateControls(true);
 
             }

@@ -23,7 +23,7 @@
 
 namespace P2PNet
 {
-    public class ConnectionStat
+    public class PeerStat
     {
         private int _receivedByteCount;
 

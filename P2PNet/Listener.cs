@@ -35,7 +35,7 @@ namespace P2PNet
         private readonly IPEndPoint _endpoint;
         private readonly Socket _listener;
 
-        internal event EventHandler<ConnectionEventArgs> ClientConnected;
+        internal event EventHandler<ConnectionEventArgs> ConnectionRequested;
 
         public Listener(int port)
         {
@@ -71,41 +71,13 @@ namespace P2PNet
                             ListenForConnections();
 
                             var newSocket = task.Result;
-                            RaiseClientConnectedEvent(new ConnectionEventArgs(newSocket));
+                            RaiseConnectionRequestedEvent(new ConnectionEventArgs(newSocket));
                         }, TaskContinuationOptions.OnlyOnRanToCompletion);
             }
             catch (ObjectDisposedException)
             {
             }
         }
-
-        //private void OnNewConnection(IAsyncResult asyncResult)
-        //{
-        //    var listener = (Socket)asyncResult.AsyncState;
-        //    var listenerClosed = false;
-
-        //    Socket newSocket = null;
-        //    try
-        //    {
-        //        newSocket = listener.EndAccept(asyncResult);
-        //        var connection = new Connection(newSocket);
-        //        RaiseClientConnectedEvent(new ConnectionEventArgs(connection));
-        //    }
-        //    catch (SocketException)
-        //    {
-        //        if (newSocket != null)
-        //            newSocket.Close();
-        //    }
-        //    catch (ObjectDisposedException)
-        //    {
-        //        listenerClosed = true;
-        //    }
-        //    finally
-        //    {
-        //        if (!listenerClosed)
-        //            _listener.BeginAccept(OnNewConnection, listener);
-        //    }
-        //}
 
         public void Stop()
         {
@@ -115,9 +87,9 @@ namespace P2PNet
             }
         }
 
-        private void RaiseClientConnectedEvent(ConnectionEventArgs args)
+        private void RaiseConnectionRequestedEvent(ConnectionEventArgs args)
         {
-            Events.RaiseAsync(ClientConnected, this, args);
+            Events.RaiseAsync(ConnectionRequested, this, args);
         }
     }
 }

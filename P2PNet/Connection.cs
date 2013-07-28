@@ -26,8 +26,8 @@ using System.Net.Sockets;
 using System.Threading.Tasks;
 using P2PNet.BufferManager;
 using P2PNet.EventArgs;
+using P2PNet.Progress;
 using P2PNet.Utils;
-using Buffer = P2PNet.BufferManager.Buffer;
 
 namespace P2PNet
 {
@@ -53,16 +53,11 @@ namespace P2PNet
             _socket.Close();
         }
 
-        internal void Receive()
+        internal void Receive(int byteCount)
         {
-            var buffer = _allocator.Allocate(128);
+            var buffer = _allocator.Allocate(byteCount);
             Func<AsyncCallback, object, IAsyncResult> beginReceive =
                 (callback, s) => _socket.BeginReceive(buffer, SocketFlags.None, callback, s);
-
-            //Task<int> task = Task.Factory.FromAsync<int>(begin, _stream.EndRead, null);
-            //task.ContinueWith(t => callback(t.Result), TaskContinuationOptions.NotOnFaulted)
-            //    .ContinueWith(t => error(t.Exception), TaskContinuationOptions.OnlyOnFaulted);
-            //return task;
 
             Task.Factory.FromAsync<int>(beginReceive, _socket.EndReceive, this)
                 .ContinueWith(task =>
@@ -91,6 +86,20 @@ namespace P2PNet
         private void RaiseClientClosedEvent()
         {
             Events.Raise(ClosedEvent, this, null);
+        }
+
+        internal bool TryReceive(int byteCount, BandwidthController bandwidthController)
+        {
+            if (!bandwidthController.CanTransmit(byteCount)) return false;
+            Receive(byteCount);
+            return true;
+        }
+
+        internal bool TrySend(int byteCount, BandwidthController bandwidthController)
+        {
+            if (!bandwidthController.CanTransmit(byteCount)) return false;
+            Receive(byteCount);
+            return true;
         }
     }
 }

@@ -1,5 +1,5 @@
 //
-// - ConnectionBundle.cs
+// - ScheduledAction.cs
 // 
 // Author:
 //     Lucas Ontivero <lucasontivero@gmail.com>
@@ -21,14 +21,18 @@
 
 // <summary></summary>
 
-using P2PNet.Protocols;
+using System;
 
-namespace P2PNet
+namespace P2PNet.Workers
 {
-    internal class ConnectionBundle
+    internal class ScheduledAction
     {
-        internal Connection Connection { get; set; }
-        internal IPacketHandler PacketHandler { get; set; }
-        internal ConnectionStat Statistics { get; set; }
+        public Action Action { get; set; }
+        public TimeSpan Interval { get; set; }
+
+        public void Execute()
+        {
+            Action();
+        }
     }
 }

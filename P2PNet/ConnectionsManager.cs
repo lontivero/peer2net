@@ -23,74 +23,49 @@
 
 using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Linq;
 using P2PNet.BufferManager;
 using P2PNet.EventArgs;
-using P2PNet.Protocols;
-using Buffer = P2PNet.BufferManager.Buffer;
+using P2PNet.Utils;
 
 namespace P2PNet
 {
     public class ConnectionsManager
     {
         private readonly IBufferAllocator _allocator;
-        private readonly ConcurrentDictionary<Guid, ConnectionBundle> _connectionBundles;
-        private readonly ConnectionIoActor _ioActor;
+        private readonly ConcurrentDictionary<Guid, Connection> _connections;
         private readonly Listener _listener;
+
+        internal event EventHandler<PeerConnectdEventArgs> PeerConnected;
 
         public ConnectionsManager(Listener listener)
         {
             _listener = listener;
 
-            _ioActor = new ConnectionIoActor();
-            _connectionBundles = new ConcurrentDictionary<Guid, ConnectionBundle>();
+            _connections = new ConcurrentDictionary<Guid, Connection>();
             _allocator = new BufferAllocator(new byte[4*1024*1024]);
-
-            _listener.ClientConnected += ClientConnected;
+            _listener.ConnectionRequested += NewConnectionRequested;
         }
 
-        public event EventHandler<PacketReceivedEventArgs> MessageReceived;
 
-        private void ClientConnected(object sender, ConnectionEventArgs e)
+        private void NewConnectionRequested(object sender, ConnectionEventArgs e)
         {
             var uid = Guid.NewGuid();
             var connection = new Connection(uid, e.Socket, _allocator);
-            var packetHandler = new RawPacketHandler();
+            _connections.TryAdd(uid, connection);
 
-            _connectionBundles.TryAdd(uid, new ConnectionBundle
-                {
-                    Connection = connection,
-                    PacketHandler = packetHandler,
-                    Statistics = new ConnectionStat()
-                });
+            PerformanceCounters.IncommingConnections.Increment();
 
-            connection.DataArrived += DataArrived;
-            packetHandler.PacketReceived += (s, o) => PacketReceived(uid, o);
-
-            _ioActor.EnqueueReceive(connection);
+            RaisePeerConnectedEvent(new PeerConnectdEventArgs{
+                Connection = connection
+            });
         }
 
-        private void PacketReceived(Guid connectionUid, PacketReceivedEventArgs e)
-        {
-            MessageReceived(connectionUid, e);
-        }
-
-        private void DataArrived(object sender, DataArrivedEventArgs e)
-        {
-            var bundle = _connectionBundles[e.ConnectionUid];
-            bundle.PacketHandler.ProcessIncomingData(e.Buffer);
-            bundle.Statistics.AddReceivedBytes(e.Buffer.Length);
-            if (bundle.PacketHandler.IsWaiting)
-            {
-                bundle.Connection.Receive();
-            }
-        }
 
         internal void Shutdown()
         {
-            var connectionsArray = new Connection[_connectionBundles.Count];
-            var connections = _connectionBundles.Select(x => x.Value.Connection).ToArray();
+            var connectionsArray = new Connection[_connections.Count];
+            var connections = _connections.Select(x => x.Value).ToArray();
             connections.CopyTo(connectionsArray, 0);
 
             foreach (var connection in connectionsArray)
@@ -98,5 +73,16 @@ namespace P2PNet
                 connection.Close();
             }
         }
+
+        private void RaisePeerConnectedEvent(PeerConnectdEventArgs args)
+        {
+            Events.RaiseAsync(PeerConnected, this, args);
+        }
+
+    }
+
+    internal class PeerConnectdEventArgs : System.EventArgs
+    {
+        public Connection Connection { get; set; }
     }
 }

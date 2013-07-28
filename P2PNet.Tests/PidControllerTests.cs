@@ -1,5 +1,5 @@
 ﻿//
-// - DataArriveEventArgs.cs
+// - PidControllerTests.cs
 // 
 // Author:
 //     Lucas Ontivero <lucasontivero@gmail.com>
@@ -22,28 +22,32 @@
 // <summary></summary>
 
 using System;
+using NUnit.Framework;
+using P2PNet.Progress;
 
-namespace P2PNet.EventArgs
+namespace P2PNet.Tests
 {
-    public class DataArrivedEventArgs : System.EventArgs
+    [TestFixture]
+    public class PidControllerTests
     {
-        private readonly byte[] _buffer;
-        private readonly Guid _source;
-
-        public DataArrivedEventArgs(Guid peerGuid, byte[] buffer)
+        [Test, Repeat(10)]
+        public void StopWhenPositiveError()
         {
-            _buffer = buffer;
-            _source = peerGuid;
-        }
+            var rand = new Random();
+            var desired = 100 * rand.NextDouble();
+            var measured = 100 * rand.NextDouble();
 
-        public byte[] Buffer
-        {
-            get { return _buffer; }
-        }
+            var controller = new PidController(0.6, 0.4);
+            for(int i = 0; i < 35 ; i++)
+            {
+                var error = desired - measured;
+                var output = controller.Control(error, 1);
 
-        public Guid Source
-        {
-            get { return _source; }
+                desired += 10;
+                measured = measured + output;
+            }
+
+            Assert.IsTrue(Math.Abs(desired - measured) <= 1e-5);
         }
     }
 }
