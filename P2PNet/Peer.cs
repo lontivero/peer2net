@@ -24,7 +24,6 @@
 using System;
 using P2PNet.BufferManager;
 using P2PNet.Progress;
-using P2PNet.Protocols;
 
 namespace P2PNet
 {
@@ -32,59 +31,51 @@ namespace P2PNet
     {
         private readonly Guid _peerId;
         private readonly Connection _connection;
-        private readonly IPacketHandler _packetHandler;
         private readonly PeerStat _statistics;
         private readonly BandwidthController _receiveBandwidthController;
         private readonly BandwidthController _sendBandwidthController;
-        private readonly SpeedWatcher _speedWatcher;
         private readonly SpeedWatcher _sendSpeedWatcher;
         private readonly SpeedWatcher _receiveSpeedWatcher;
 
-        internal Guid Id
+        public Guid Id
         {
             get { return _peerId; }
         }
 
-        internal Connection Connection
+        public Connection Connection
         {
             get { return _connection; }
         }
 
-        internal IPacketHandler PacketHandler
-        {
-            get { return _packetHandler; }
-        }
-
-        internal PeerStat Statistics
+        public PeerStat Statistics
         {
             get { return _statistics; }
         }
 
-        internal BandwidthController ReceiveBandwidthController
+        public BandwidthController ReceiveBandwidthController
         {
             get { return _receiveBandwidthController; }
         }
 
-        internal BandwidthController SendBandwidthController
+        public BandwidthController SendBandwidthController
         {
             get { return _sendBandwidthController; }
         }
 
-        internal SpeedWatcher SendSpeedWatcher
+        public SpeedWatcher SendSpeedWatcher
         {
             get { return _sendSpeedWatcher; }
         }
 
-        internal SpeedWatcher ReceiveSpeedWatcher
+        public SpeedWatcher ReceiveSpeedWatcher
         {
-            get { return _sendSpeedWatcher; }
+            get { return _receiveSpeedWatcher; }
         }
 
-        public Peer(Connection connection, IPacketHandler packetHandler)
+        public Peer(Connection connection)
         {
-            _peerId = connection.Uid;
+            _peerId = connection.Id;
             _connection = connection;
-            _packetHandler = packetHandler;
             _sendSpeedWatcher = new SpeedWatcher();
             _receiveSpeedWatcher = new SpeedWatcher();
             _receiveBandwidthController = new BandwidthController();

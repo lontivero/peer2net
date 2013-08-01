@@ -21,21 +21,27 @@
 
 // <summary></summary>
 
+using System;
+using System.Collections.Generic;
 using P2PNet.Progress;
+using Buffer = P2PNet.BufferManager.Buffer;
 
 namespace P2PNet
 {
     internal class IOState
     {
-        private readonly Connection _connection;
-        private readonly BandwidthController _bandwidthController;
-        private readonly int _bytes;
+        private static readonly Queue<IOState> _pool = new Queue<IOState>();
 
-        private IOState(int bytes, Connection connection, BandwidthController bandwidthController)
+        private Connection _connection;
+        private BandwidthController _bandwidthController;
+        private int _bytes;
+        private Buffer _buffer;
+        private Action<Connection, byte[]> _callback;
+        private int _pendingBytes;
+
+
+        private IOState()
         {
-            _bytes = bytes;
-            _connection = connection;
-            _bandwidthController = bandwidthController;
         }
 
         public Connection Connection
@@ -53,9 +59,59 @@ namespace P2PNet
             get { return _bytes; }
         }
 
-        public static IOState Create(int bytes, Connection connection, BandwidthController bandwidthController)
+        public int PendingBytes
         {
-            return new IOState(bytes, connection, bandwidthController);
+            get { return _pendingBytes; }
+            set { _pendingBytes = value;  }
+        }
+
+        public Buffer Buffer
+        {
+            get
+            {
+                return new Buffer(new ArraySegment<byte>(
+                    _buffer.Segment.Array,
+                    _buffer.Segment.Offset + (_buffer.Segment.Count - _pendingBytes ),
+                    _pendingBytes));
+            }
+        }
+
+        public byte[] GetData()
+        {
+            var data = new byte[_buffer.Size];
+            _buffer.CopyTo(data);
+            return data;
+        }
+
+        public static IOState Create(Buffer buffer, Connection connection, BandwidthController bandwidthController, Action<Connection, byte[]> callback)
+        {
+            var state = _pool.Count > 0 ? _pool.Dequeue() : new IOState();
+
+            state._buffer = buffer;
+            state._bytes = buffer.Size;
+            state._pendingBytes = state._bytes;
+            state._connection = connection;
+            state._bandwidthController = bandwidthController;
+            state._callback = callback;
+            return state;
+        }
+
+        public Action<byte[]> Callback
+        {
+            get
+            {
+                return (data)=> _callback(_connection, data);
+            }
+        }
+
+        public Buffer InternalBuffer
+        {
+            get { return _buffer; }
+        }
+
+        public void Release()
+        {
+           _pool.Enqueue(this);
         }
     }
 }

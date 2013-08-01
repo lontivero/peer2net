@@ -37,9 +37,9 @@ namespace P2PNet.Tests
         {
             var memeory = new byte[256];
             var bufferManager = new P2PNet.BufferManager.BufferAllocator(memeory);
-            var buffer = bufferManager.Allocate(64).First();
-            Assert.AreEqual(0, buffer.Offset);
-            Assert.AreEqual(64, buffer.Count);
+            var buffer = bufferManager.Allocate(64);
+            Assert.AreEqual(0, buffer.Segment.Offset);
+            Assert.AreEqual(64, buffer.Segment.Count);
         }
 
         [Test]
@@ -47,10 +47,10 @@ namespace P2PNet.Tests
         {
             var memeory = new byte[256];
             var bufferManager = new P2PNet.BufferManager.BufferAllocator(memeory);
-            var buffer1 = bufferManager.Allocate(64).First();
-            var buffer2 = bufferManager.Allocate(128).First();
-            Assert.AreEqual(128, buffer2.Offset);
-            Assert.AreEqual(128, buffer2.Count);
+            var buffer1 = bufferManager.Allocate(64);
+            var buffer2 = bufferManager.Allocate(128);
+            Assert.AreEqual(128, buffer2.Segment.Offset);
+            Assert.AreEqual(128, buffer2.Segment.Count);
         }
 
         [Test]
@@ -61,9 +61,9 @@ namespace P2PNet.Tests
             var buffer1 = bufferManager.Allocate(64);
             bufferManager.Free(buffer1);
 
-            var buffer2 = bufferManager.Allocate(128).First();
-            Assert.AreEqual(0, buffer2.Offset);
-            Assert.AreEqual(128, buffer2.Count);
+            var buffer2 = bufferManager.Allocate(128);
+            Assert.AreEqual(0, buffer2.Segment.Offset);
+            Assert.AreEqual(128, buffer2.Segment.Count);
         }
 
         [Test]
@@ -80,9 +80,8 @@ namespace P2PNet.Tests
             bufferManager.Free(buffer);
 
             buffer = bufferManager.Allocate(32); // 64 - 95
-            Assert.AreEqual(64, buffer.First().Offset);
-            Assert.AreEqual(32, buffer.First().Count);
+            Assert.AreEqual(64, buffer.Segment.Offset);
+            Assert.AreEqual(32, buffer.Segment.Count);
         }
-
     }
 }

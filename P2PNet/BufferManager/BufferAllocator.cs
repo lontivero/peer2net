@@ -42,20 +42,26 @@ namespace P2PNet.BufferManager
             var blocks = SizeToBlocks(size);
             var offset = _allocator.Allocate(blocks);
             PerformanceCounters.BufferMemoryUsed.IncrementBy(blocks*BlockSize);
-            return new Buffer {new ArraySegment<byte>(_buffer, offset * BlockSize, size)};
+            return new Buffer(new ArraySegment<byte>(_buffer, offset * BlockSize, size));
         }
 
-        public void Free(Buffer segments)
+        public void Free(Buffer buffer)
         {
-            foreach (var segment in segments)
-            {
-                _allocator.Free(segment.Offset / BlockSize);
-            }
+            var blocks = SizeToBlocks(buffer.Size);
+            _allocator.Free(buffer.Segment.Offset / BlockSize);
+            PerformanceCounters.BufferMemoryUsed.IncrementBy(blocks * BlockSize);
         }
 
         private static int SizeToBlocks(int size)
         {
             return (int) Math.Ceiling((decimal) size/BlockSize);
+        }
+
+        public Buffer AllocateAndCopy(byte[] data)
+        {
+            var buffer = Allocate(data.Length);
+            System.Buffer.BlockCopy(data, 0, buffer.Segment.Array, buffer.Segment.Offset, data.Length);
+            return buffer;
         }
     }
 }

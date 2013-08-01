@@ -21,15 +21,64 @@
 
 // <summary></summary>
 
+using System;
+
 namespace P2PNet
 {
     public class PeerStat
     {
-        private int _receivedByteCount;
+        private long _receivedByteCount;
+        private readonly DateTime _connectionDate;
+        private long _sentByteCount;
 
-        public void AddReceivedBytes(int byteCount)
+        public PeerStat()
         {
-            _receivedByteCount += byteCount;
+            _connectionDate = DateTime.UtcNow;
+        }
+
+        private double SecondsSinceConnected
+        {
+            get{ return 1000.0 / (DateTime.UtcNow - _connectionDate).TotalMilliseconds; }
+        }
+
+        public long ReceivedByteCount
+        {
+            get { return _receivedByteCount; }
+        }
+
+        public long SentByteCount
+        {
+            get { return _sentByteCount; }
+        }
+
+        public long AverageReceiveSpeed
+        {
+            get { return (long) (_receivedByteCount/SecondsSinceConnected); }
+        }
+
+        public long AverageSendSpeed
+        {
+            get { return (long)(_sentByteCount / SecondsSinceConnected); }
+        }
+
+        public DateTime ConnectionDate
+        {
+            get { return _connectionDate; }
+        }
+
+        public TimeSpan ConnectedTime
+        {
+            get { return DateTime.UtcNow - _connectionDate; }
+        }
+
+        internal void AddReceivedBytes(int byteCount)
+        {
+            _receivedByteCount = ReceivedByteCount + byteCount;
+        }
+
+        internal void AddSentBytes(int byteCount)
+        {
+            _sentByteCount = ReceivedByteCount + byteCount;
         }
     }
 }

@@ -1,5 +1,5 @@
-//
-// - Buffer.cs
+﻿//
+// - Settings.cs
 // 
 // Author:
 //     Lucas Ontivero <lucasontivero@gmail.com>
@@ -22,39 +22,37 @@
 // <summary></summary>
 
 using System;
-using System.Collections.Generic;
 
-namespace P2PNet.BufferManager
+namespace P2PNet.NodeConsole
 {
-    public class Buffer
+    class Settings
     {
-        private ArraySegment<byte> _segment;
+        private bool _tracing;
+        private int _port;
+        private string _seed;
 
-        public Buffer(ArraySegment<byte> segment)
+        public Settings()
         {
-            _segment = segment;
+            _tracing = false;
+            _port = 1234 + (new Random().Next(100));
         }
 
-        public void CopyTo(byte[] array)
+        public bool Tracing
         {
-            var length = array.Length;
-            System.Buffer.BlockCopy(_segment.Array, _segment.Offset, array, 0, Math.Min(_segment.Count, length));
+            get { return _tracing; }
+            set { _tracing = value; }
         }
 
-        public int Size 
-        { 
-            get { return _segment.Count; }
-        }
-
-        public ArraySegment<byte> Segment
+        public int Port
         {
-            get { return _segment; }
+            get { return _port; }
+            set { _port = value; }
         }
 
-        public List<ArraySegment<byte>> ToArraySegmentList()
+        public string Seed
         {
-            return new List<ArraySegment<byte>> {_segment};
+            get { return _seed; }
+            set { _seed = value; }
         }
-
     }
 }

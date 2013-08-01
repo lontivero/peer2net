@@ -1,5 +1,5 @@
-//
-// - Buffer.cs
+﻿//
+// - ClientWorker.cs
 // 
 // Author:
 //     Lucas Ontivero <lucasontivero@gmail.com>
@@ -22,39 +22,40 @@
 // <summary></summary>
 
 using System;
-using System.Collections.Generic;
 
-namespace P2PNet.BufferManager
+namespace P2PNet.Workers
 {
-    public class Buffer
+    class ClientWorker : IWorker, IWorkScheduler
     {
-        private ArraySegment<byte> _segment;
+        private readonly BackgroundWorker _backgroundWorker;
+        private readonly TimedWorker _timedWorker;
 
-        public Buffer(ArraySegment<byte> segment)
+        public ClientWorker()
         {
-            _segment = segment;
+            _backgroundWorker = new BackgroundWorker();
+            _timedWorker = new TimedWorker();
         }
 
-        public void CopyTo(byte[] array)
+        public void Queue(Action action)
         {
-            var length = array.Length;
-            System.Buffer.BlockCopy(_segment.Array, _segment.Offset, array, 0, Math.Min(_segment.Count, length));
+            _backgroundWorker.Queue(action);
         }
 
-        public int Size 
-        { 
-            get { return _segment.Count; }
-        }
-
-        public ArraySegment<byte> Segment
+        public void Queue(Action action, TimeSpan interval)
         {
-            get { return _segment; }
+            _timedWorker.Queue(() => _backgroundWorker.Queue(action), interval);
         }
 
-        public List<ArraySegment<byte>> ToArraySegmentList()
+        public void Start()
         {
-            return new List<ArraySegment<byte>> {_segment};
+            _backgroundWorker.Start();
+            _timedWorker.Start();
         }
 
+        public void Stop()
+        {
+            _timedWorker.Stop();
+            _backgroundWorker.Stop();
+        }
     }
 }

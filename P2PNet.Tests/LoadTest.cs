@@ -32,35 +32,26 @@ using NUnit.Framework;
 namespace P2PNet.Tests
 {
     [TestFixture]
-    public class LoadTest
+    public class LoadTest: IClientManager
     {
         private Listener _listener;
-        private ConnectionsManager _connectionManager;
         private ComunicationManager _comunicationManager;
         private Socket[] _sockets;
+        private List<int> _receiveMessages;
 
         [SetUp]
         public void Setup()
         {
+            _receiveMessages = new List<int>();
             _listener = new Listener(8000);
-            _connectionManager = new ConnectionsManager(_listener);
-            _comunicationManager = new ComunicationManager(_connectionManager);
-            _sockets = new Socket[100];
+            _comunicationManager = new ComunicationManager(_listener, this);
+            _sockets = new Socket[1];
             _listener.Start();
         }
 
         [Test]
         public void DoIt()
         {
-            var receiveMessages = new List<int>();
-            _comunicationManager.MessageReceived += (o, e) =>
-                {
-                    lock (receiveMessages)
-                    {
-                        receiveMessages.Add(Int32.Parse(Encoding.ASCII.GetString(e.Packet)));
-                    }
-                };
-
             var messages = new byte[_sockets.Length][];
             for (var i = 0; i < _sockets.Length; i++)
             {
@@ -73,13 +64,13 @@ namespace P2PNet.Tests
             {
                 sm.Socket.BeginSend(sm.Message, 0, sm.Message.Length, SocketFlags.None, null, sm.Socket);
             }
-            Thread.Sleep(10000);
+            Thread.Sleep(1000);
 
-            var duplicates = receiveMessages.GroupBy(i => i)
+            var duplicates = _receiveMessages.GroupBy(i => i)
               .Where(g => g.Count() > 1)
               .Select(g => g.Key);
 
-            Assert.AreEqual(receiveMessages.Count, messages.Length, "there are missing messages");
+            Assert.AreEqual(_receiveMessages.Count, messages.Length, "there are missing messages");
             Assert.AreEqual(0, duplicates.Count(), "there are duplicated messages");
         }
 
@@ -110,5 +101,18 @@ namespace P2PNet.Tests
             return packet;
         }
 
+        public void OnPeerConnected(Peer peer)
+        {
+        }
+
+        public void OnPeerDataReceived(Peer peer, byte[] buffer)
+        {
+            _receiveMessages.Add(Int32.Parse(Encoding.ASCII.GetString(buffer)));
+        }
+
+        public void OnPeerDataSent(Peer peer, byte[] data)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

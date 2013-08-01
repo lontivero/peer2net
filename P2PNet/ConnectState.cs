@@ -1,5 +1,5 @@
-﻿//
-// - DataArriveEventArgs.cs
+//
+// - ConnectState.cs
 // 
 // Author:
 //     Lucas Ontivero <lucasontivero@gmail.com>
@@ -23,27 +23,32 @@
 
 using System;
 
-namespace P2PNet.EventArgs
+namespace P2PNet
 {
-    public class DataArrivedEventArgs : System.EventArgs
+    internal class ConnectState
     {
-        private readonly byte[] _buffer;
-        private readonly Guid _source;
+        private readonly Action<Connection> _callback;
+        private readonly Connection _connection;
 
-        public DataArrivedEventArgs(Guid peerGuid, byte[] buffer)
+        private ConnectState(Connection connection, Action<Connection> callback)
         {
-            _buffer = buffer;
-            _source = peerGuid;
+            _connection = connection;
+            _callback = callback;
         }
 
-        public byte[] Buffer
+        public Action Callback
         {
-            get { return _buffer; }
+            get { return ()=>_callback(_connection); }
         }
 
-        public Guid Source
+        public Connection Connection
         {
-            get { return _source; }
+            get { return _connection; }
+        }
+
+        public static ConnectState Create(Connection connection, Action<Connection> callback)
+        {
+            return new ConnectState(connection, callback);
         }
     }
 }

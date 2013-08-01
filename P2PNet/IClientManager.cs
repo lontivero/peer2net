@@ -1,5 +1,5 @@
 ﻿//
-// - Program.cs
+// - IClientManager.cs
 // 
 // Author:
 //     Lucas Ontivero <lucasontivero@gmail.com>
@@ -21,29 +21,12 @@
 
 // <summary></summary>
 
-using System;
-using Mono.Options;
-
-namespace P2PNet.NodeConsole
+namespace P2PNet
 {
-    static class Program
+    public interface IClientManager
     {
-        /// <summary>
-        /// The main entry point for the application.
-        /// </summary>
-        [STAThread]
-        static void Main(string[] args)
-        {
-            var settings = new Settings();
-            var p = new OptionSet()
-                .Add("t", v => settings.Tracing = true)
-                .Add("p=|port=", v => settings.Port = Int32.Parse(v))
-                .Add("s=|seed=", v => settings.Seed = v);
-
-            p.Parse (args);
-            var console = new P2PConsole(settings);
-            console.Start();
-
-        }
+        void OnPeerConnected(Peer peer);
+        void OnPeerDataReceived(Peer peer, byte[] buffer);
+        void OnPeerDataSent(Peer peer, byte[] data);
     }
 }

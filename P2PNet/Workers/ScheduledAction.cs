@@ -22,17 +22,44 @@
 // <summary></summary>
 
 using System;
+using System.Collections.Generic;
 
 namespace P2PNet.Workers
 {
-    internal class ScheduledAction
+    internal class ScheduledAction : IComparable<ScheduledAction>
     {
-        public Action Action { get; set; }
-        public TimeSpan Interval { get; set; }
+        private static readonly Queue<ScheduledAction> _pool = new Queue<ScheduledAction>();
+        public Action Action { get; private set; }
+        public TimeSpan Interval { get; private set; }
+        public DateTime NextExecutionDate { get; set; }
+
+        private ScheduledAction(){}
 
         public void Execute()
         {
             Action();
+        }
+
+        public int CompareTo(ScheduledAction other)
+        {
+            if (other == this) return 0;
+
+            var diff = NextExecutionDate.CompareTo(other.NextExecutionDate);
+            return (diff >= 0) ? 1 : -1;
+        }
+
+        public static ScheduledAction Create(Action action, TimeSpan interval, DateTime nextExecutionDate)
+        {
+            var sa = _pool.Count > 0 ? _pool.Dequeue() : new ScheduledAction();
+            sa.Action = action;
+            sa.Interval = interval;
+            sa.NextExecutionDate = nextExecutionDate;
+            return sa;
+        }
+
+        public void Release()
+        {
+            _pool.Enqueue(this);
         }
     }
 }

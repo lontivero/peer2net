@@ -29,7 +29,7 @@ using System.Text;
 
 namespace P2PNet.Progress
 {
-    class BandwidthController
+    public class BandwidthController
     {
         private readonly PidController _pidController;
         private int _targeSpeed;
@@ -52,7 +52,7 @@ namespace P2PNet.Progress
             }
         }
 
-        public bool CanTransmit(int bytesCount)
+        internal bool CanTransmit(int bytesCount)
         {
             if (bytesCount > 0 && _accumulatedBytes < bytesCount) return false;
 
@@ -60,7 +60,7 @@ namespace P2PNet.Progress
             return true;
         }
 
-        public void Update(double measuredSpeed, TimeSpan deltaTime)
+        internal void Update(double measuredSpeed, TimeSpan deltaTime)
         {
             var seconds = deltaTime.TotalMilliseconds / 1000.0;
             var deltaSpeed = _targeSpeed - measuredSpeed;

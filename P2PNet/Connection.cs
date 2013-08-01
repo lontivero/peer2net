@@ -22,84 +22,81 @@
 // <summary></summary>
 
 using System;
+using System.Net;
 using System.Net.Sockets;
 using System.Threading.Tasks;
-using P2PNet.BufferManager;
-using P2PNet.EventArgs;
-using P2PNet.Progress;
-using P2PNet.Utils;
+using Buffer = P2PNet.BufferManager.Buffer;
 
 namespace P2PNet
 {
     public class Connection
     {
         private readonly Socket _socket;
-        private readonly IBufferAllocator _allocator;
+        private readonly IPEndPoint _endpoint;
 
-        public Connection(Guid uid, Socket socket, IBufferAllocator allocator)
+        public Guid Id { get; private set; }
+        public Uri Uri { get; private set; }
+
+        public IPEndPoint Endpoint
         {
-            Uid = uid;
+            get { return _endpoint; }
+        }
+
+        public Connection(IPEndPoint endpoint)
+            : this(new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp), endpoint)
+        {}
+
+        public Connection(Socket socket)
+            : this(socket, (IPEndPoint)socket.RemoteEndPoint)
+        {}
+
+        public Connection(Socket socket, IPEndPoint endpoint)
+        {
+            Id = Guid.NewGuid();
             _socket = socket;
-            _allocator = allocator;
+            _endpoint = endpoint;
+            Uri = new Uri("tcp://" + Endpoint.Address + ':' + Endpoint.Port);
         }
 
-        public Guid Uid { get; private set; }
-
-        public event EventHandler<DataArrivedEventArgs> DataArrived;
-        public event EventHandler<System.EventArgs> ClosedEvent;
-
-        public void Close()
+        internal void Receive(Buffer buffer, Action<int> onFinishCallback)
         {
-            _socket.Close();
-        }
-
-        internal void Receive(int byteCount)
-        {
-            var buffer = _allocator.Allocate(byteCount);
             Func<AsyncCallback, object, IAsyncResult> beginReceive =
-                (callback, s) => _socket.BeginReceive(buffer, SocketFlags.None, callback, s);
+                (callback, s) => _socket.BeginReceive(buffer.ToArraySegmentList(), SocketFlags.None, callback, s);
 
             Task.Factory.FromAsync<int>(beginReceive, _socket.EndReceive, this)
                 .ContinueWith(task =>
                     {
+                        if(task.IsFaulted) return;
                         int bytesRead = task.Result;
-
-                        if (bytesRead > 0)
-                        {
-                            var data = new byte[bytesRead];
-                            buffer.CopyTo(data);
-                            RaiseDataArrivedEvent(new DataArrivedEventArgs(Uid, data));
-                        }
-                        else
-                        {
-                            Close();
-                        }
-                        _allocator.Free(buffer);
+                        onFinishCallback(bytesRead);
                     });
         }
 
-        private void RaiseDataArrivedEvent(DataArrivedEventArgs args)
+        internal void Send(Buffer buffer, Action<int> onFinishCallback)
         {
-            Events.Raise(DataArrived, this, args);
+            Func<AsyncCallback, object, IAsyncResult> beginSend =
+                (callback, s) => _socket.BeginSend(buffer.ToArraySegmentList(), SocketFlags.None, callback, s);
+
+            Task.Factory.FromAsync<int>(beginSend, _socket.EndSend, this)
+                .ContinueWith(task =>
+                {
+                    int sentByteCount = task.Result;
+                    onFinishCallback(sentByteCount);
+                });
         }
 
-        private void RaiseClientClosedEvent()
+        internal void Connect(Action onConnected)
         {
-            Events.Raise(ClosedEvent, this, null);
+            Func<AsyncCallback, object, IAsyncResult> beginConnect =
+                (callback, s) => _socket.BeginConnect( Endpoint, callback, s);
+
+            Task.Factory.FromAsync(beginConnect, _socket.EndConnect, this)
+                .ContinueWith(task => onConnected());
         }
 
-        internal bool TryReceive(int byteCount, BandwidthController bandwidthController)
+        internal void Close()
         {
-            if (!bandwidthController.CanTransmit(byteCount)) return false;
-            Receive(byteCount);
-            return true;
-        }
-
-        internal bool TrySend(int byteCount, BandwidthController bandwidthController)
-        {
-            if (!bandwidthController.CanTransmit(byteCount)) return false;
-            Receive(byteCount);
-            return true;
+            _socket.Close();
         }
     }
 }

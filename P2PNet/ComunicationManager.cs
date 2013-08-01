@@ -23,55 +23,61 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Net;
 using P2PNet.BufferManager;
 using P2PNet.EventArgs;
-using P2PNet.Progress;
-using P2PNet.Protocols;
 using P2PNet.Workers;
 
 namespace P2PNet
 {
-    class ComunicationManager
+    public class ComunicationManager
     {
-        private readonly ConnectionsManager _connectionsManager;
-        private readonly TimedWorker _timedWorker;
+        private readonly Listener _listener;
+        private readonly IClientManager _clientManager;
+        private readonly ClientWorker _worker;
         private readonly ConnectionIoActor _ioActor;
-        private readonly ConcurrentDictionary<Guid, Peer> _peers;
+        private readonly ConcurrentDictionary<IPEndPoint, Peer> _peers;
         private readonly SpeedWatcher _globalReceiveSpeedWatcher;
         private readonly SpeedWatcher _globalSendSpeedWatcher;
-        private BackgroundWorker _worker;
 
-        public event EventHandler<PacketReceivedEventArgs> MessageReceived;
-
-
-        public ComunicationManager(ConnectionsManager connectionsManager)
+        public ComunicationManager(Listener listener, IClientManager clientManager)
         {
-            _connectionsManager = connectionsManager;
-            _timedWorker = new TimedWorker();
-            _ioActor = new ConnectionIoActor(_timedWorker);
-            _peers = new ConcurrentDictionary<Guid, Peer>();
+            _listener = listener;
+            _clientManager = clientManager;
+            _worker = new ClientWorker();
+            _ioActor = new ConnectionIoActor(_worker);
+            _peers = new ConcurrentDictionary<IPEndPoint, Peer>();
 
             _globalReceiveSpeedWatcher = new SpeedWatcher();
             _globalSendSpeedWatcher = new SpeedWatcher();
 
-            _connectionsManager.PeerConnected += NewPeerConnected;
-            _timedWorker.Queue(TimeSpan.FromSeconds(0.5), CalculateSpeed);
-            _worker = new BackgroundWorker();
-            _timedWorker.Start();
+            _worker.Queue(CalculateSpeed, TimeSpan.FromSeconds(0.5));
+            _worker.Start();
+
+            _listener.ConnectionRequested += NewPeerConnected;
         }
 
-        private void NewPeerConnected(object sender, PeerConnectdEventArgs args)
+        public SpeedWatcher GlobalReceiveSpeedWatcher
         {
-            var connection = args.Connection;
+            get { return _globalReceiveSpeedWatcher; }
+        }
 
-            var packetHandler = new RawPacketHandler();
+        public SpeedWatcher GlobalSendSpeedWatcher
+        {
+            get { return _globalSendSpeedWatcher; }
+        }
 
-            var peer = new Peer(connection, packetHandler);
-            _peers.TryAdd(peer.Id, peer);
+        private void NewPeerConnected(object sender, ConnectionEventArgs args)
+        {
+            var connection = new Connection(args.Socket);
 
-            packetHandler.PacketReceived += (s, o) => PacketReceived(peer.Id, o);
-            connection.DataArrived += DataArrived;
-            _ioActor.EnqueueReceive(1, connection, peer.ReceiveBandwidthController);
+            PerformanceCounters.IncommingConnections.Increment();
+
+            var peer = new Peer(connection);
+            _peers.TryAdd(peer.Connection.Endpoint, peer);
+
+//            _ioActor.EnqueueReceive(1, connection, peer.ReceiveBandwidthController, OnDataArrive);
+            _clientManager.OnPeerConnected(peer);
         }
 
 
@@ -84,35 +90,72 @@ namespace P2PNet
                 sendWatcher.CalculateAndReset();
                 receiveWatcher.CalculateAndReset();
 
-                peer.SendBandwidthController.Update(sendWatcher.BytesPerSecond, sendWatcher.Interval);
-                peer.ReceiveBandwidthController.Update(receiveWatcher.BytesPerSecond, receiveWatcher.Interval);
+                peer.SendBandwidthController.Update(sendWatcher.BytesPerSecond, sendWatcher.MeasuredDeltaTime);
+                peer.ReceiveBandwidthController.Update(receiveWatcher.BytesPerSecond, receiveWatcher.MeasuredDeltaTime);
             }
         }
 
-        private void PacketReceived(Guid connectionUid, PacketReceivedEventArgs e)
+        private void OnDataArrive(Connection connection, byte[] data)
         {
-            MessageReceived(connectionUid, e);
-        }
-
-        private void DataArrived(object sender, DataArrivedEventArgs e)
-        {
-            _worker.Enqueue(() =>
+            _worker.Queue(() =>
                 {
-                    var peer = _peers[e.Source];
-                    var butesReceived = e.Buffer.Length;
+                    var peer = _peers[connection.Endpoint];
+                    var butesReceived = data.Length;
 
-                    _globalReceiveSpeedWatcher.AddBytes(butesReceived);
+                    GlobalReceiveSpeedWatcher.AddBytes(butesReceived);
 
-                    peer.PacketHandler.ProcessIncomingData(e.Buffer);
                     peer.Statistics.AddReceivedBytes(butesReceived);
                     peer.ReceiveSpeedWatcher.AddBytes(butesReceived);
 
-                    if (peer.PacketHandler.IsWaiting)
-                    {
-                        _ioActor.EnqueueReceive(peer.PacketHandler.PendingBytes, peer.Connection,
-                                                peer.ReceiveBandwidthController);
-                    }
+                    //if (peer.PacketHandler.IsWaiting)
+                    //{
+                    //    _ioActor.EnqueueReceive(peer.PacketHandler.PendingBytes, peer.Connection,
+                    //                            peer.ReceiveBandwidthController, OnDataArrive);
+                    //}
+                    _clientManager.OnPeerDataReceived(peer, data);
                 });
+        }
+
+        public void Connect(IPEndPoint endpoint)
+        {
+            _ioActor.EnqueueConnect(endpoint, OnConnected);
+        }
+
+        private void OnConnected(Connection connection)
+        {
+            var peer = new Peer(connection);
+            _peers.TryAdd(connection.Endpoint, peer);
+
+//            _ioActor.EnqueueReceive(1, connection, peer.ReceiveBandwidthController, OnDataArrive);
+            _clientManager.OnPeerConnected(peer);
+        }
+
+        public void Receive(int bytes, IPEndPoint endpoint)
+        {
+            var peer = _peers[endpoint];
+            _ioActor.EnqueueReceive(bytes, peer.Connection, peer.ReceiveBandwidthController, OnDataArrive);
+        }
+
+        public void SendTo(byte[] message, IPEndPoint endpoint)
+        {
+            var peer = _peers[endpoint];
+            _ioActor.EnqueueSend(message, peer.Connection, peer.SendBandwidthController, OnDataSent);
+        }
+
+        private void OnDataSent(Connection connection, byte[] data)
+        {
+            _worker.Queue(() =>
+            {
+                var peer = _peers[connection.Endpoint];
+                var bytesSent = data.Length;
+
+                GlobalSendSpeedWatcher.AddBytes(bytesSent);
+
+                peer.Statistics.AddSentBytes(bytesSent);
+                peer.SendSpeedWatcher.AddBytes(bytesSent);
+
+                _clientManager.OnPeerDataSent(peer, data);
+            });
         }
     }
 }

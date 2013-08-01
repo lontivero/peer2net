@@ -25,7 +25,7 @@ using System;
 
 namespace P2PNet.BufferManager
 {
-    internal class SpeedWatcher
+    public class SpeedWatcher
     {
         private int _transmitedBytes;
         private DateTime _sampledTime;
@@ -33,7 +33,7 @@ namespace P2PNet.BufferManager
         private TimeSpan _deltaTime;
         private readonly object _syncObject = new object();
 
-        public SpeedWatcher()
+        internal SpeedWatcher()
         {
             _sampledTime = DateTime.UtcNow;
             _transmitedBytes = 0;
@@ -44,12 +44,12 @@ namespace P2PNet.BufferManager
             get { return _speed;  }
         }
 
-        public TimeSpan Interval
+        public TimeSpan MeasuredDeltaTime
         {
             get { return _deltaTime; }
         }
 
-        public void AddBytes(int byteCount)
+        internal void AddBytes(int byteCount)
         {
             lock (_syncObject)
             {
@@ -57,7 +57,7 @@ namespace P2PNet.BufferManager
             }
         }
 
-        public void CalculateAndReset()
+        internal void CalculateAndReset()
         {
             lock (_syncObject)
             {

@@ -35,32 +35,27 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
-    <Reference Include="System.ServiceModel" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BufferManager\BuddyBufferAllocator.cs" />
     <Compile Include="BufferManager\BufferAllocator.cs" />
     <Compile Include="ComunicationManager.cs" />
     <Compile Include="Connection.cs" />
+    <Compile Include="ConnectState.cs" />
+    <Compile Include="IClientManager.cs" />
     <Compile Include="Peer.cs" />
     <Compile Include="ConnectionIOManager.cs" />
     <Compile Include="ConnectionStat.cs" />
-    <Compile Include="PerformanceCounters.cs" />
+    <Compile Include="Progress\PerformanceCounters.cs" />
     <Compile Include="Progress\PidController.cs" />
     <Compile Include="Progress\BandwidthController.cs" />
-    <Compile Include="Progress\Speed.cs" />
     <Compile Include="BufferManager\SpeedWatcher.cs" />
     <Compile Include="Workers\BackgroundWorker.cs" />
-    <Compile Include="Workers\EndlessWorker.cs" />
+    <Compile Include="Workers\BlockingQueue.cs" />
+    <Compile Include="Workers\ClientWorker.cs" />
     <Compile Include="EventArgs\ConnectionEventArgs.cs" />
-    <Compile Include="ConnectionsManager.cs" />
-    <Compile Include="EventArgs\DataArriveEventArgs.cs" />
     <Compile Include="GlobalSuppressions.cs" />
+    <Compile Include="Workers\IWorker.cs" />
     <Compile Include="Workers\PauseToken.cs" />
     <Compile Include="Workers\PauseTokenSource.cs" />
     <Compile Include="Protocols\EchoProtocol.cs" />

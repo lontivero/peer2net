@@ -60,7 +60,6 @@ namespace P2PNet.Progress
                 var pid = _kp * error + _ki * _integral + _kd * derivative;
                 _prevError = error;
                 return pid;
-                
             }
         }
     }

@@ -24,31 +24,26 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace P2PNet.Workers
 {
-    internal class TimedWorker
+    internal class TimedWorker: IWorkScheduler
     {
         private readonly CancellationTokenSource _cancellationTokenSource;
-        private readonly SortedList<DateTime, ScheduledAction> _actions = new SortedList<DateTime, ScheduledAction>();
+        private readonly List<ScheduledAction> _actions = new List<ScheduledAction>();
         private readonly AutoResetEvent _resetEvent = new AutoResetEvent(false);
-
 
         public TimedWorker()
         {
             _cancellationTokenSource = new CancellationTokenSource();
-
-            Start();
         }
 
         public void Start()
         {
             Task.Factory.StartNew(() =>
                 {
-                    var kvp = new KeyValuePair<DateTime, ScheduledAction>();
                     ScheduledAction scheduledAction = null;
                     var runTime = new DateTime();
 
@@ -57,15 +52,14 @@ namespace P2PNet.Workers
                         bool any;
                         lock (_actions)
                         {
-                            any = _actions.Any();
-                            if (any) kvp = _actions.First();
+                            any = _actions.Count > 0;
+                            if (any) scheduledAction = _actions[0];
                         }
 
                         TimeSpan timeToWait;
                         if (any)
                         {
-                            scheduledAction = kvp.Value;
-                            runTime = kvp.Key;
+                            runTime = scheduledAction.NextExecutionDate;
                             var dT = runTime - DateTime.UtcNow;
                             timeToWait = dT > TimeSpan.Zero ? dT : TimeSpan.Zero;
                         }
@@ -80,21 +74,38 @@ namespace P2PNet.Workers
                             scheduledAction.Execute();
                             lock (_actions)
                             {
-                                _actions.Remove(runTime);
-                                _actions.Add(DateTime.UtcNow.Add(kvp.Value.Interval), scheduledAction);
+                                Remove(scheduledAction);
+                                Queue(scheduledAction.Action, scheduledAction.Interval);
                             }
                         }
                     }
                 }, _cancellationTokenSource.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
         }
 
-        public void Queue(TimeSpan interval, Action action)
+        private void Remove(ScheduledAction scheduledAction)
         {
-            var scheduledAction = new ScheduledAction { Action = action, Interval = interval };
             lock (_actions)
             {
-                _actions.Add(DateTime.UtcNow.Add(interval), scheduledAction);
-                if (_actions.First().Value.Action == action)
+                var pos = _actions.BinarySearch(scheduledAction);
+                _actions.RemoveAt(pos);
+                scheduledAction.Release();
+                if(pos==0)
+                {
+                    _resetEvent.Set();
+                }
+            }
+        }
+
+        public void Queue(Action action, TimeSpan interval)
+        {
+            var scheduledAction = ScheduledAction.Create(action, interval, DateTime.UtcNow + interval);
+            lock (_actions)
+            {
+                var pos = _actions.BinarySearch(scheduledAction);
+                pos = pos >= 0 ? pos : ~pos;
+                _actions.Insert(pos, scheduledAction);
+
+                if (pos == 0)
                 {
                     _resetEvent.Set();
                 }
