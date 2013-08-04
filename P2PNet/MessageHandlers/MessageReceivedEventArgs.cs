@@ -1,5 +1,5 @@
 //
-// - EchoProtocol.cs
+// - PacketReceivedEventArgs.cs
 // 
 // Author:
 //     Lucas Ontivero <lucasontivero@gmail.com>
@@ -21,34 +21,20 @@
 
 // <summary></summary>
 
-using System;
-
-namespace P2PNet.Protocols
+namespace P2PNet.MessageHandlers
 {
-    public class EchoProtocol : IProtocol
+    public class MessageReceivedEventArgs : System.EventArgs
     {
-        private readonly IProtocol _baseProtocol;
+        private readonly byte[] _data;
 
-        public EchoProtocol(IProtocol baseProtocol)
+        public MessageReceivedEventArgs(byte[] data)
         {
-            _baseProtocol = baseProtocol;
-            _baseProtocol.MessageReceived += BaseProtocolOnMessageReceived;
+            _data = data;
         }
 
-        #region IProtocol Members
-
-        public event EventHandler<MessageReceivedEventArgs> MessageReceived;
-
-        #endregion
-
-        private void BaseProtocolOnMessageReceived(object sender, MessageReceivedEventArgs e)
+        public byte[] Packet
         {
-            Send(e.Client, e.Message);
-        }
-
-        internal void Send(Connection connection, string message)
-        {
-            // _baseProtocol.Send(connection, message);
+            get { return _data; }
         }
     }
 }

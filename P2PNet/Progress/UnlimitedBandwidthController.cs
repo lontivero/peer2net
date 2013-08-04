@@ -1,5 +1,5 @@
-//
-// - PacketReceivedEventArgs.cs
+﻿//
+// - BandwidthController.cs
 // 
 // Author:
 //     Lucas Ontivero <lucasontivero@gmail.com>
@@ -21,20 +21,23 @@
 
 // <summary></summary>
 
-namespace P2PNet.Protocols
-{
-    public class PacketReceivedEventArgs : System.EventArgs
-    {
-        private readonly byte[] _packet;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using System.Text;
 
-        public PacketReceivedEventArgs(byte[] packet)
+namespace P2PNet.Progress
+{
+    public class UnlimitedBandwidthController : IBandwidthController
+    {
+        public bool CanTransmit(int bytesCount)
         {
-            _packet = packet;
+            return true;
         }
 
-        public byte[] Packet
+        public void Update(double measuredSpeed, TimeSpan deltaTime)
         {
-            get { return _packet; }
         }
     }
 }

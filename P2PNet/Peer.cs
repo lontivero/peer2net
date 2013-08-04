@@ -22,6 +22,7 @@
 // <summary></summary>
 
 using System;
+using System.Net;
 using P2PNet.BufferManager;
 using P2PNet.Progress;
 
@@ -29,7 +30,6 @@ namespace P2PNet
 {
     public class Peer
     {
-        private readonly Guid _peerId;
         private readonly Connection _connection;
         private readonly PeerStat _statistics;
         private readonly BandwidthController _receiveBandwidthController;
@@ -37,14 +37,19 @@ namespace P2PNet
         private readonly SpeedWatcher _sendSpeedWatcher;
         private readonly SpeedWatcher _receiveSpeedWatcher;
 
-        public Guid Id
-        {
-            get { return _peerId; }
-        }
-
-        public Connection Connection
+        internal Connection Connection
         {
             get { return _connection; }
+        }
+
+        public Uri Uri
+        {
+            get { return _connection.Uri; }
+        }
+
+        public IPEndPoint EndPoint
+        {
+            get { return _connection.Endpoint; }
         }
 
         public PeerStat Statistics
@@ -72,9 +77,8 @@ namespace P2PNet
             get { return _receiveSpeedWatcher; }
         }
 
-        public Peer(Connection connection)
+        internal Peer(Connection connection)
         {
-            _peerId = connection.Id;
             _connection = connection;
             _sendSpeedWatcher = new SpeedWatcher();
             _receiveSpeedWatcher = new SpeedWatcher();

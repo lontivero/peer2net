@@ -43,32 +43,26 @@ namespace P2PNet
 
             _bufferAllocator = new BufferAllocator(new byte[1 << 16]);
             _worker = worker;
-          //  _worker.Queue(SendEnqueued, TimeSpan.FromMilliseconds(100));
-            _worker.Queue(ReceiveEnqueued, TimeSpan.FromMilliseconds(100));
+            _worker.Queue(SendEnqueued, TimeSpan.FromMilliseconds(10));
+            _worker.Queue(ReceiveEnqueued, TimeSpan.FromMilliseconds(9));
         }
 
         private void ReceiveEnqueued()
         {
             var c = _receiveQueue.Count;
-            for(var i = 0; i < c; i++)
+            for (var i = 0; i < c; i++)
             {
                 Receive(_receiveQueue.Take());
             }
+        }
 
+        private void SendEnqueued(){
             var d = _sendQueue.Count;
             for (var i = 0; i < d; i++)
             {
                 Send(_sendQueue.Take());
             }
         }
-
-        //private void SendEnqueued()
-        //{
-        //    foreach (var ioState in _sendQueue)
-        //    {
-        //        Send(ioState);
-        //    }
-        //}
 
         private void Send(IOState state)
         {
@@ -78,24 +72,26 @@ namespace P2PNet
                 return;
             }
 
-            state.Connection.Send(state.Buffer, sentCount =>
+            state.Connection.Send(state.Buffer, (sentCount, success) =>
                 {
                     try
                     {
-                        if (sentCount == 0)
+                        if(success && sentCount > 0)
                         {
-                            state.Connection.Close();
-                            return;
-                        }
-                        if (sentCount < state.PendingBytes)
-                        {
-                            state.PendingBytes -= sentCount;
-                            _sendQueue.Add(state);
+                            if (sentCount < state.PendingBytes)
+                            {
+                                state.PendingBytes -= sentCount;
+                                _sendQueue.Add(state);
+                            }
+                            else
+                            {
+                                var data = state.GetData();
+                                state.SuccessCallback(data);
+                            }
                         }
                         else
                         {
-                            var data = state.GetData();
-                            state.Callback(data);
+                            state.FailureCallback();
                         }
                     }
                     finally
@@ -114,24 +110,26 @@ namespace P2PNet
                 return;
             }
 
-            state.Connection.Receive(state.Buffer, readCount =>
+            state.Connection.Receive(state.Buffer, (readCount, success) =>
                 {
                     try
                     {
-                        if (readCount == 0)
+                        if (success && readCount > 0 )
                         {
-                            state.Connection.Close();
-                            return;
-                        }
-                        if (readCount < state.PendingBytes)
-                        {
-                            state.PendingBytes -= readCount;
-                            _receiveQueue.Add(state);
+                            if (readCount < state.PendingBytes)
+                            {
+                                state.PendingBytes -= readCount;
+                                _receiveQueue.Add(state);
+                            }
+                            else
+                            {
+                                var data = state.GetData();
+                                state.SuccessCallback(data);
+                            }
                         }
                         else
                         {
-                            var data = state.GetData();
-                            state.Callback(data);
+                            state.FailureCallback();
                         }
                     }
                     finally
@@ -143,28 +141,38 @@ namespace P2PNet
         }
 
         public void EnqueueSend(byte[] data, Connection connection, BandwidthController bandwidthController,
-                                Action<Connection, byte[]> callback)
+                                Action<Connection, byte[]> onSuccess, Action<Connection> onFailure)
         {
             var buffer = _bufferAllocator.AllocateAndCopy(data);
-            Send(IOState.Create(buffer, connection, bandwidthController, callback));
+            Send(IOState.Create(buffer, connection, bandwidthController, onSuccess, onFailure));
         }
 
         public void EnqueueReceive(int bytes, Connection connection, BandwidthController bandwidthController,
-                                   Action<Connection, byte[]> callback)
+                                   Action<Connection, byte[]> onSuccess, Action<Connection> onFailure)
         {
             var buffer = _bufferAllocator.Allocate(bytes);
-            Receive(IOState.Create(buffer, connection, bandwidthController, callback));
+            Receive(IOState.Create(buffer, connection, bandwidthController, onSuccess, onFailure));
         }
 
-        public void EnqueueConnect(IPEndPoint endpoint, Action<Connection> callback)
+        public void EnqueueConnect(IPEndPoint endpoint, Action<Connection> onSuccess, Action<Connection> onFailure )
         {
             var connection = new Connection(endpoint);
-            Connect(ConnectState.Create(connection, callback));
+            Connect(ConnectState.Create(connection, onSuccess, onFailure));
         }
 
         private void Connect(ConnectState state)
         {
-            state.Connection.Connect(() => state.Callback());
+            state.Connection.Connect(success =>
+                {
+                    if(success)
+                    {
+                        state.SuccessCallback();
+                    }
+                    else
+                    {
+                        state.FailureCallback();
+                    }
+                });
         }
     }
 }

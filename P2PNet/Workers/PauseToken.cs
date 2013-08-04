@@ -25,7 +25,7 @@ using System.Threading.Tasks;
 
 namespace P2PNet.Workers
 {
-    public struct PauseToken
+    struct PauseToken
     {
         private readonly PauseTokenSource _source;
         internal PauseToken(PauseTokenSource source) { _source = source; }

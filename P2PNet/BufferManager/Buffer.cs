@@ -26,7 +26,7 @@ using System.Collections.Generic;
 
 namespace P2PNet.BufferManager
 {
-    public class Buffer
+    internal class Buffer
     {
         private ArraySegment<byte> _segment;
 

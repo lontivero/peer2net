@@ -23,24 +23,29 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Net;
 using P2PNet.BufferManager;
 using P2PNet.EventArgs;
+using P2PNet.Utils;
 using P2PNet.Workers;
 
 namespace P2PNet
 {
+    /// <summary>
+    /// 
+    /// </summary>
     public class ComunicationManager
     {
         private readonly Listener _listener;
-        private readonly IClientManager _clientManager;
+        private readonly ClientManager _clientManager;
         private readonly ClientWorker _worker;
         private readonly ConnectionIoActor _ioActor;
         private readonly ConcurrentDictionary<IPEndPoint, Peer> _peers;
         private readonly SpeedWatcher _globalReceiveSpeedWatcher;
         private readonly SpeedWatcher _globalSendSpeedWatcher;
 
-        public ComunicationManager(Listener listener, IClientManager clientManager)
+        public ComunicationManager(Listener listener, ClientManager clientManager)
         {
             _listener = listener;
             _clientManager = clientManager;
@@ -67,19 +72,57 @@ namespace P2PNet
             get { return _globalSendSpeedWatcher; }
         }
 
+        public void Connect(IPEndPoint endpoint)
+        {
+            Guard.NotNull(endpoint, "endpoint");
+            _ioActor.EnqueueConnect(endpoint, OnConnected, OnConnectError);
+        }
+
+        public void Receive(int bytes, IPEndPoint endpoint)
+        {
+            Guard.IsGreaterOrEqualTo(bytes, 0, "bytes");
+            Guard.NotNull(endpoint, "endpoint");
+            Guard.ContainsKey(_peers, endpoint, "Peer is not registered.");
+ 
+            var peer = _peers[endpoint];
+            _ioActor.EnqueueReceive(bytes, peer.Connection, peer.ReceiveBandwidthController, OnDataArrive, OnDataArriveError);
+        }
+
+        public void Send(byte[] message, IPEndPoint endpoint)
+        {
+            Guard.NotNull(endpoint, "endpoint");
+            Guard.NotNull(message, "message");
+
+            var peer = _peers[endpoint];
+            _ioActor.EnqueueSend(message, peer.Connection, peer.SendBandwidthController, OnDataSent, OnDataSentError);
+        }
+
+        public void Send(byte[] message, IEnumerable<IPEndPoint> endpoints)
+        {
+            Guard.NotNull(message, "message");
+
+            foreach (var endpoint in endpoints)
+            {
+                Send(message, endpoint);
+            }
+        }
+
         private void NewPeerConnected(object sender, ConnectionEventArgs args)
         {
             var connection = new Connection(args.Socket);
 
             PerformanceCounters.IncommingConnections.Increment();
 
+            RegisterPeer(connection);
+        }
+
+        private void RegisterPeer(Connection connection)
+        {
             var peer = new Peer(connection);
             _peers.TryAdd(peer.Connection.Endpoint, peer);
 
-//            _ioActor.EnqueueReceive(1, connection, peer.ReceiveBandwidthController, OnDataArrive);
             _clientManager.OnPeerConnected(peer);
         }
-
 
         private void CalculateSpeed()
         {
@@ -95,6 +138,16 @@ namespace P2PNet
             }
         }
 
+        private void OnConnected(Connection connection)
+        {
+            RegisterPeer(connection);
+        }
+
+        private void OnConnectError(Connection connection)
+        {
+            CloseConnection(connection);
+        }
+
         private void OnDataArrive(Connection connection, byte[] data)
         {
             _worker.Queue(() =>
@@ -107,39 +160,13 @@ namespace P2PNet
                     peer.Statistics.AddReceivedBytes(butesReceived);
                     peer.ReceiveSpeedWatcher.AddBytes(butesReceived);
 
-                    //if (peer.PacketHandler.IsWaiting)
-                    //{
-                    //    _ioActor.EnqueueReceive(peer.PacketHandler.PendingBytes, peer.Connection,
-                    //                            peer.ReceiveBandwidthController, OnDataArrive);
-                    //}
                     _clientManager.OnPeerDataReceived(peer, data);
                 });
         }
 
-        public void Connect(IPEndPoint endpoint)
+        private void OnDataArriveError(Connection connection)
         {
-            _ioActor.EnqueueConnect(endpoint, OnConnected);
-        }
-
-        private void OnConnected(Connection connection)
-        {
-            var peer = new Peer(connection);
-            _peers.TryAdd(connection.Endpoint, peer);
-
-//            _ioActor.EnqueueReceive(1, connection, peer.ReceiveBandwidthController, OnDataArrive);
-            _clientManager.OnPeerConnected(peer);
-        }
-
-        public void Receive(int bytes, IPEndPoint endpoint)
-        {
-            var peer = _peers[endpoint];
-            _ioActor.EnqueueReceive(bytes, peer.Connection, peer.ReceiveBandwidthController, OnDataArrive);
-        }
-
-        public void SendTo(byte[] message, IPEndPoint endpoint)
-        {
-            var peer = _peers[endpoint];
-            _ioActor.EnqueueSend(message, peer.Connection, peer.SendBandwidthController, OnDataSent);
+            CloseConnection(connection);
         }
 
         private void OnDataSent(Connection connection, byte[] data)
@@ -156,6 +183,19 @@ namespace P2PNet
 
                 _clientManager.OnPeerDataSent(peer, data);
             });
+        }
+
+        private void OnDataSentError(Connection connection)
+        {
+            CloseConnection(connection);
+        }
+
+        private void CloseConnection(Connection connection)
+        {
+            Peer peer;
+            _peers.TryRemove(connection.Endpoint, out peer);
+            connection.Close();
+            _clientManager.OnClosed(peer);
         }
     }
 }

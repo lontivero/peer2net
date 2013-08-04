@@ -27,18 +27,25 @@ namespace P2PNet
 {
     internal class ConnectState
     {
-        private readonly Action<Connection> _callback;
+        private readonly Action<Connection> _onSuccess;
+        private readonly Action<Connection> _onFailure;
         private readonly Connection _connection;
 
-        private ConnectState(Connection connection, Action<Connection> callback)
+        private ConnectState(Connection connection, Action<Connection> onSuccess, Action<Connection> onFailure)
         {
             _connection = connection;
-            _callback = callback;
+            _onSuccess = onSuccess;
+            _onFailure = onFailure;
         }
 
-        public Action Callback
+        public Action SuccessCallback
         {
-            get { return ()=>_callback(_connection); }
+            get { return ()=>_onSuccess(_connection); }
+        }
+
+        public Action FailureCallback
+        {
+            get { return () => _onFailure(_connection); }
         }
 
         public Connection Connection
@@ -46,9 +53,9 @@ namespace P2PNet
             get { return _connection; }
         }
 
-        public static ConnectState Create(Connection connection, Action<Connection> callback)
+        public static ConnectState Create(Connection connection, Action<Connection> onSuccess, Action<Connection> onFailure)
         {
-            return new ConnectState(connection, callback);
+            return new ConnectState(connection, onSuccess, onFailure);
         }
     }
 }

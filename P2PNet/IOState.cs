@@ -36,7 +36,8 @@ namespace P2PNet
         private BandwidthController _bandwidthController;
         private int _bytes;
         private Buffer _buffer;
-        private Action<Connection, byte[]> _callback;
+        private Action<Connection, byte[]> _onSuccess;
+        private Action<Connection> _onFailure;
         private int _pendingBytes;
 
 
@@ -83,7 +84,7 @@ namespace P2PNet
             return data;
         }
 
-        public static IOState Create(Buffer buffer, Connection connection, BandwidthController bandwidthController, Action<Connection, byte[]> callback)
+        public static IOState Create(Buffer buffer, Connection connection, BandwidthController bandwidthController, Action<Connection, byte[]> onSuccess, Action<Connection> onFailure)
         {
             var state = _pool.Count > 0 ? _pool.Dequeue() : new IOState();
 
@@ -92,15 +93,24 @@ namespace P2PNet
             state._pendingBytes = state._bytes;
             state._connection = connection;
             state._bandwidthController = bandwidthController;
-            state._callback = callback;
+            state._onSuccess = onSuccess;
+            state._onFailure = onFailure;
             return state;
         }
 
-        public Action<byte[]> Callback
+        public Action<byte[]> SuccessCallback
         {
             get
             {
-                return (data)=> _callback(_connection, data);
+                return data=> _onSuccess(_connection, data);
+            }
+        }
+
+        public Action FailureCallback
+        {
+            get
+            {
+                return () => _onFailure(_connection);
             }
         }
 

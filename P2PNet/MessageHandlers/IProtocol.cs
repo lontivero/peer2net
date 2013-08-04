@@ -1,5 +1,5 @@
 //
-// - IPacketHandler.cs
+// - IProtocol.cs
 // 
 // Author:
 //     Lucas Ontivero <lucasontivero@gmail.com>
@@ -23,13 +23,11 @@
 
 using System;
 
-namespace P2PNet.Protocols
+namespace P2PNet.MessageHandlers
 {
-    public interface IPacketHandler
+    public interface IProtocol
     {
-        bool IsWaiting { get; }
-        int PendingBytes { get; }
-        event EventHandler<PacketReceivedEventArgs> PacketReceived;
-        void ProcessIncomingData(byte[] data);
+        event EventHandler<MessageReceivedEventArgs> MessageReceived;
+        // void Send(Connection connection, string message);
     }
 }

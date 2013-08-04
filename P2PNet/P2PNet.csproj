@@ -39,6 +39,7 @@
   <ItemGroup>
     <Compile Include="BufferManager\BuddyBufferAllocator.cs" />
     <Compile Include="BufferManager\BufferAllocator.cs" />
+    <Compile Include="ClientManager.cs" />
     <Compile Include="ComunicationManager.cs" />
     <Compile Include="Connection.cs" />
     <Compile Include="ConnectState.cs" />
@@ -46,10 +47,14 @@
     <Compile Include="Peer.cs" />
     <Compile Include="ConnectionIOManager.cs" />
     <Compile Include="ConnectionStat.cs" />
+    <Compile Include="Progress\IBandwidthController.cs" />
+    <Compile Include="Progress\UnlimitedBandwidthController.cs" />
     <Compile Include="Progress\PerformanceCounters.cs" />
     <Compile Include="Progress\PidController.cs" />
     <Compile Include="Progress\BandwidthController.cs" />
     <Compile Include="BufferManager\SpeedWatcher.cs" />
+    <Compile Include="MessageHandlers\EotMessageHandler.cs" />
+    <Compile Include="Utils\Guard.cs" />
     <Compile Include="Workers\BackgroundWorker.cs" />
     <Compile Include="Workers\BlockingQueue.cs" />
     <Compile Include="Workers\ClientWorker.cs" />
@@ -58,16 +63,14 @@
     <Compile Include="Workers\IWorker.cs" />
     <Compile Include="Workers\PauseToken.cs" />
     <Compile Include="Workers\PauseTokenSource.cs" />
-    <Compile Include="Protocols\EchoProtocol.cs" />
-    <Compile Include="Protocols\IProtocol.cs" />
+    <Compile Include="MessageHandlers\IProtocol.cs" />
     <Compile Include="IOState.cs" />
     <Compile Include="Utils\Events.cs" />
     <Compile Include="BufferManager\IBufferAllocator.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Protocols\BasicProtocol.cs" />
-    <Compile Include="Protocols\IPacketHandler.cs" />
-    <Compile Include="Protocols\RawPacketHandler.cs" />
-    <Compile Include="Protocols\PacketReceivedEventArgs.cs" />
+    <Compile Include="MessageHandlers\IStreamHandler.cs" />
+    <Compile Include="MessageHandlers\PascalMessageHandler.cs" />
+    <Compile Include="MessageHandlers\MessageReceivedEventArgs.cs" />
     <Compile Include="BufferManager\Buffer.cs" />
     <Compile Include="Listener.cs" />
     <Compile Include="Workers\ScheduledAction.cs" />

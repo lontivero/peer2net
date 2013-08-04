@@ -25,23 +25,55 @@ using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Text;
+using P2PNet.MessageHandlers;
 
 namespace P2PNet.NodeConsole
 {
-    class P2PConsole : IClientManager
+    class ChatSession
+    {
+        private readonly PascalMessageHandler _messageHandler;
+        private readonly Peer _peer;
+        private readonly ComunicationManager _comunicationManager;
+
+        public ChatSession(Peer peer, ComunicationManager comunicationManager)
+        {
+            _comunicationManager = comunicationManager;
+            _peer = peer;
+            _messageHandler = new PascalMessageHandler();
+            _messageHandler.MessageReceived += OnMessageReceived;
+            _comunicationManager.Receive(4, _peer.EndPoint);
+        }
+
+        private void OnMessageReceived(object sender, MessageReceivedEventArgs packetReceivedEventArgs)
+        {
+            Console.WriteLine("{0} wrote:", _peer.Uri);
+            Console.WriteLine("\t{0}\n", GetString(packetReceivedEventArgs.Packet));
+        }
+
+        public void ProcessInput(byte[] data)
+        {
+            _messageHandler.ProcessIncomingData(data);
+            _comunicationManager.Receive(_messageHandler.PendingBytes, _peer.EndPoint);
+        }
+
+        static string GetString(byte[] buffer)
+        {
+            return Encoding.UTF8.GetString(buffer);
+        }
+    }
+
+
+    class P2PConsole : ClientManager
     {
         private readonly Settings _settings;
         private readonly ComunicationManager _comunicationManager;
         private readonly Listener _listener;
-        private readonly Dictionary<string, Action<string[]>> _commands;
+        private readonly Dictionary<IPEndPoint, ChatSession> _sessions;
+ 
 
         public P2PConsole(Settings settings)
         {
-            _commands = new Dictionary<string, Action<string[]>>()
-                {
-                    {"connect", p => ConnectTo(p[1])},
-                    {"send", p=>SendMessageTo(p[1], p[2])}
-                };
+            _sessions = new Dictionary<IPEndPoint, ChatSession>();
             _settings = settings;
             _listener = new Listener(settings.Port);
             _comunicationManager = new ComunicationManager(_listener, this);
@@ -53,25 +85,45 @@ namespace P2PNet.NodeConsole
             Wellcome();
 
             var line = ReadCommand();
-            while (line[0] != "q")
+            while (line != ":q")
             {
-                _commands[line[0]](line);
+                if(line.StartsWith(":c"))
+                {
+                    ConnectTo(line.Substring(2));
+                }
+                else
+                {
+                    SendMessage(line);                    
+                }
                 line = ReadCommand();
             }
 
             Stop();
         }
 
+        private void Wellcome()
+        {
+            Console.WriteLine("P2PNet chat in port: " + _settings.Port);
+            Console.WriteLine("Press :q to exit");
+            Console.WriteLine("");
+        }
+
+        private static string ReadCommand()
+        {
+            var line = Console.ReadLine();
+            return line;
+        }
+
         private void Stop()
         {
             _listener.Stop();
         }
-        private void SendMessageTo(string message, string node)
+
+        private void SendMessage(string message)
         {
-            var nodeParts = node.Split(':');
-            var ip = IPAddress.Parse(nodeParts[0]);
-            var port = int.Parse(nodeParts[1]);
-            _comunicationManager.SendTo(GetBytes(message), new IPEndPoint(ip, port));
+            var msg = GetBytes(message);
+
+            _comunicationManager.Send(PascalMessageHandler.FormatMessage(msg), _sessions.Keys);
         }
 
         private void ConnectTo(string node)
@@ -82,45 +134,32 @@ namespace P2PNet.NodeConsole
             _comunicationManager.Connect(new IPEndPoint(ip, port) );
         }
 
-        private void Wellcome()
+        public override void Connected(Peer peer)
         {
-            Console.WriteLine("P2PNet Node listening in port: " + _settings.Port);
-            Console.WriteLine("Press q to exit");
-            Console.WriteLine("");
+            var session = new ChatSession(peer, _comunicationManager);
+            _sessions.Add(peer.EndPoint, session);
+            Console.WriteLine("{0} connected", peer.EndPoint );
         }
 
-        private static string[] ReadCommand()
+        public override void Closed(Peer peer)
         {
-            Console.Write(">");
-            var line = Console.ReadLine();
-            return line.Split(new char[] {' '}, StringSplitOptions.RemoveEmptyEntries);
+            _sessions.Remove(peer.EndPoint);
+            Console.WriteLine("{0} disconnected!", peer.EndPoint);
         }
 
-        public void OnPeerConnected(Peer peer)
+        public override void DataReceived(Peer peer, byte[] data)
         {
-            Console.WriteLine("Peer: {0} Connected!", peer.Connection.Uri);
-            _comunicationManager.Receive(4, peer.Connection.Endpoint);
+            var session = _sessions[peer.EndPoint];
+            session.ProcessInput(data);
         }
 
-        public void OnPeerDataReceived(Peer peer, byte[] buffer)
+        public override void DataSent(Peer peer, byte[] data)
         {
-            Console.Write(peer.Connection.Uri + ": " + GetString(buffer));
-            _comunicationManager.Receive(4, peer.Connection.Endpoint);
-        }
-
-        public void OnPeerDataSent(Peer peer, byte[] data)
-        {
-            Console.Write(" (Sent)");
-        }
-
-        static string GetString(byte[] buffer)
-        {
-            return Encoding.ASCII.GetString(buffer);
         }
 
         static byte[] GetBytes(string str)
         {
-            return Encoding.ASCII.GetBytes(str);
+            return Encoding.UTF8.GetBytes(str);
         }
     }
 }

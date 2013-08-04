@@ -29,12 +29,11 @@ using Buffer = P2PNet.BufferManager.Buffer;
 
 namespace P2PNet
 {
-    public class Connection
+    internal class Connection
     {
         private readonly Socket _socket;
         private readonly IPEndPoint _endpoint;
 
-        public Guid Id { get; private set; }
         public Uri Uri { get; private set; }
 
         public IPEndPoint Endpoint
@@ -52,51 +51,66 @@ namespace P2PNet
 
         public Connection(Socket socket, IPEndPoint endpoint)
         {
-            Id = Guid.NewGuid();
             _socket = socket;
             _endpoint = endpoint;
             Uri = new Uri("tcp://" + Endpoint.Address + ':' + Endpoint.Port);
         }
 
-        internal void Receive(Buffer buffer, Action<int> onFinishCallback)
+        internal void Receive(Buffer buffer, Action<int, bool> callback)
         {
             Func<AsyncCallback, object, IAsyncResult> beginReceive =
-                (callback, s) => _socket.BeginReceive(buffer.ToArraySegmentList(), SocketFlags.None, callback, s);
+                (cb, s) => CallbackOnError(() => _socket.BeginReceive(buffer.ToArraySegmentList(), SocketFlags.None, cb, s), e => callback(0, e));
 
-            Task.Factory.FromAsync<int>(beginReceive, _socket.EndReceive, this)
-                .ContinueWith(task =>
-                    {
-                        if(task.IsFaulted) return;
-                        int bytesRead = task.Result;
-                        onFinishCallback(bytesRead);
-                    });
+            var task = Task.Factory.FromAsync<int>(beginReceive, _socket.EndReceive, this);
+            task.ContinueWith(t => callback(t.Result, true), TaskContinuationOptions.NotOnFaulted)
+                .ContinueWith(t => callback(0, false), TaskContinuationOptions.OnlyOnFaulted);
+            task.ContinueWith(t => callback(0, false), TaskContinuationOptions.OnlyOnFaulted);
         }
 
-        internal void Send(Buffer buffer, Action<int> onFinishCallback)
+        internal void Send(Buffer buffer, Action<int, bool> callback)
         {
             Func<AsyncCallback, object, IAsyncResult> beginSend =
-                (callback, s) => _socket.BeginSend(buffer.ToArraySegmentList(), SocketFlags.None, callback, s);
+                (cb, s) => CallbackOnError(()=> _socket.BeginSend(buffer.ToArraySegmentList(), SocketFlags.None, cb, s), e=>callback(0, e));
 
-            Task.Factory.FromAsync<int>(beginSend, _socket.EndSend, this)
-                .ContinueWith(task =>
-                {
-                    int sentByteCount = task.Result;
-                    onFinishCallback(sentByteCount);
-                });
+            var task = Task.Factory.FromAsync<int>(beginSend, _socket.EndSend, this);
+            task.ContinueWith(t => callback(t.Result, true), TaskContinuationOptions.NotOnFaulted)
+                .ContinueWith(t => callback(0, false), TaskContinuationOptions.OnlyOnFaulted);
+            task.ContinueWith(t => callback(0, false), TaskContinuationOptions.OnlyOnFaulted);
         }
 
-        internal void Connect(Action onConnected)
+        internal void Connect(Action<bool> callback)
         {
             Func<AsyncCallback, object, IAsyncResult> beginConnect =
-                (callback, s) => _socket.BeginConnect( Endpoint, callback, s);
+                (cb, s) => CallbackOnError(()=>
+                    {
+                        var asyncResult = _socket.BeginConnect(Endpoint, cb, s);
+                        var success = asyncResult.AsyncWaitHandle.WaitOne(20, true);
+                        if(!success) throw new TimeoutException("Connect timeout");
+                        return asyncResult;
+                    }, callback);
 
-            Task.Factory.FromAsync(beginConnect, _socket.EndConnect, this)
-                .ContinueWith(task => onConnected());
+            var task = Task.Factory.FromAsync(beginConnect, _socket.EndConnect, this);
+            task.ContinueWith(t => callback(true), TaskContinuationOptions.NotOnFaulted)
+                .ContinueWith(t => callback(false), TaskContinuationOptions.OnlyOnFaulted);
+            task.ContinueWith(t => callback(false), TaskContinuationOptions.OnlyOnFaulted);
         }
 
         internal void Close()
         {
             _socket.Close();
+        }
+
+        private T CallbackOnError<T>(Func<T> func, Action<bool> callback)
+        {
+            try
+            {
+                return func();
+            }
+            catch (Exception)
+            {
+                callback(false);
+                return default(T);
+            }
         }
     }
 }

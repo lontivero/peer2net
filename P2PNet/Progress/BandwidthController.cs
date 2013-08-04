@@ -26,6 +26,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using P2PNet.Utils;
 
 namespace P2PNet.Progress
 {
@@ -35,7 +36,7 @@ namespace P2PNet.Progress
         private int _targeSpeed;
         private int _accumulatedBytes;
 
-        public BandwidthController()
+        internal BandwidthController()
         {
             _pidController = new PidController();
             _targeSpeed = Int32.MaxValue;
@@ -45,8 +46,9 @@ namespace P2PNet.Progress
         public int TargetSpeed
         {
             get { return _targeSpeed; }
-            set 
-            { 
+            set
+            {
+                Guard.IsBeetwen(value, 0, int.MaxValue, "value");
                 _targeSpeed = value;
                 _accumulatedBytes = _targeSpeed;
             }
@@ -67,7 +69,7 @@ namespace P2PNet.Progress
 
             var correction = _pidController.Control(deltaSpeed, seconds);
             _accumulatedBytes += (int)(correction);
-//            Debug.Write(string.Format("measured: {0}   delta speed: {1}   - acc: {2}", measuredSpeed, deltaSpeed, _accumulatedBytes));
+            _accumulatedBytes = _accumulatedBytes > 0 ? _accumulatedBytes : Int32.MaxValue;
         }
     }
 }

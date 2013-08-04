@@ -26,7 +26,7 @@ using System.Threading.Tasks;
 
 namespace P2PNet.Workers
 {
-    public class PauseTokenSource
+    class PauseTokenSource
     {
         private volatile TaskCompletionSource<bool> _paused;
         internal static readonly Task CompletedTask = StartSomeTask();

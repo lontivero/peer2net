@@ -23,7 +23,7 @@
 
 namespace P2PNet.BufferManager
 {
-    public interface IBufferAllocator
+    interface IBufferAllocator
     {
         Buffer Allocate(int size);
         void Free(Buffer segments);
