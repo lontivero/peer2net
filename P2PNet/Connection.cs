@@ -24,18 +24,19 @@
 using System;
 using System.Net;
 using System.Net.Sockets;
-using System.Threading.Tasks;
+using P2PNet.Workers;
 using Buffer = P2PNet.BufferManager.Buffer;
 
 namespace P2PNet
 {
     internal class Connection
     {
+        private static readonly BlockingQueue<SocketAsyncEventArgs> _sendRecvSaeaPool = new BlockingQueue<SocketAsyncEventArgs>();
+        private static readonly BlockingQueue<SocketAsyncEventArgs> _connectSaeaPool = new BlockingQueue<SocketAsyncEventArgs>();
+
         private readonly Socket _socket;
         private readonly IPEndPoint _endpoint;
-
-        public Uri Uri { get; private set; }
-
+ 
         public IPEndPoint Endpoint
         {
             get { return _endpoint; }
@@ -53,64 +54,110 @@ namespace P2PNet
         {
             _socket = socket;
             _endpoint = endpoint;
-            Uri = new Uri("tcp://" + Endpoint.Address + ':' + Endpoint.Port);
+        }
+
+        private SocketAsyncEventArgs GetSendRecvSocketAsyncEventArgs()
+        {
+            return _sendRecvSaeaPool.Count > 0
+                    ? _sendRecvSaeaPool.Take()
+                    : new Func<SocketAsyncEventArgs>(() =>
+                    {
+                        var e = new SocketAsyncEventArgs();
+                        e.Completed += SendRecvCompleted;
+                        return e;
+                    })();
+        }
+
+        private SocketAsyncEventArgs GetConnectSocketAsyncEventArgs()
+        {
+            return _connectSaeaPool.Count > 0
+                    ? _connectSaeaPool.Take()
+                    : new Func<SocketAsyncEventArgs>(() =>
+                    {
+                        var e = new SocketAsyncEventArgs();
+                        e.Completed += ConnectCompleted;
+                        return e;
+                    })();
+        }
+
+
+        private void SendRecvCompleted(object sender, SocketAsyncEventArgs socketAsyncEventArgs)
+        {
+            try
+            {
+                var callback = (Action<int, bool>) socketAsyncEventArgs.UserToken;
+
+                if (socketAsyncEventArgs.SocketError != SocketError.Success ||
+                    socketAsyncEventArgs.BytesTransferred == 0)
+                {
+                    callback(0, false);
+                    return;
+                }
+
+                callback(socketAsyncEventArgs.BytesTransferred, true);
+            }
+            finally
+            {
+                _sendRecvSaeaPool.Add(socketAsyncEventArgs);
+            }
+        }
+
+        private void ConnectCompleted(object sender, SocketAsyncEventArgs socketAsyncEventArgs)
+        {
+            try
+            {
+                var callback = (Action<bool>)socketAsyncEventArgs.UserToken;
+                var success = socketAsyncEventArgs.SocketError == SocketError.Success;
+                callback(success);
+            }
+            finally
+            {
+                _connectSaeaPool.Add(socketAsyncEventArgs);
+            }
         }
 
         internal void Receive(Buffer buffer, Action<int, bool> callback)
         {
-            Func<AsyncCallback, object, IAsyncResult> beginReceive =
-                (cb, s) => CallbackOnError(() => _socket.BeginReceive(buffer.ToArraySegmentList(), SocketFlags.None, cb, s), e => callback(0, e));
+            var recvAsyncEventArgs = GetSendRecvSocketAsyncEventArgs();
+            recvAsyncEventArgs.UserToken = callback;
+            recvAsyncEventArgs.BufferList = buffer.ToArraySegmentList();
+            var async = _socket.ReceiveAsync(recvAsyncEventArgs);
 
-            var task = Task.Factory.FromAsync<int>(beginReceive, _socket.EndReceive, this);
-            task.ContinueWith(t => callback(t.Result, true), TaskContinuationOptions.NotOnFaulted)
-                .ContinueWith(t => callback(0, false), TaskContinuationOptions.OnlyOnFaulted);
-            task.ContinueWith(t => callback(0, false), TaskContinuationOptions.OnlyOnFaulted);
+            if(!async)
+            {
+                SendRecvCompleted(null, recvAsyncEventArgs);
+            }
         }
 
         internal void Send(Buffer buffer, Action<int, bool> callback)
         {
-            Func<AsyncCallback, object, IAsyncResult> beginSend =
-                (cb, s) => CallbackOnError(()=> _socket.BeginSend(buffer.ToArraySegmentList(), SocketFlags.None, cb, s), e=>callback(0, e));
+            var sendAsyncEventArgs = GetSendRecvSocketAsyncEventArgs();
+            sendAsyncEventArgs.UserToken = callback;
+            sendAsyncEventArgs.BufferList = buffer.ToArraySegmentList();
+            var async = _socket.SendAsync(sendAsyncEventArgs);
 
-            var task = Task.Factory.FromAsync<int>(beginSend, _socket.EndSend, this);
-            task.ContinueWith(t => callback(t.Result, true), TaskContinuationOptions.NotOnFaulted)
-                .ContinueWith(t => callback(0, false), TaskContinuationOptions.OnlyOnFaulted);
-            task.ContinueWith(t => callback(0, false), TaskContinuationOptions.OnlyOnFaulted);
+            if (!async)
+            {
+                SendRecvCompleted(null, sendAsyncEventArgs);
+            }
         }
 
         internal void Connect(Action<bool> callback)
         {
-            Func<AsyncCallback, object, IAsyncResult> beginConnect =
-                (cb, s) => CallbackOnError(()=>
-                    {
-                        var asyncResult = _socket.BeginConnect(Endpoint, cb, s);
-                        var success = asyncResult.AsyncWaitHandle.WaitOne(20, true);
-                        if(!success) throw new TimeoutException("Connect timeout");
-                        return asyncResult;
-                    }, callback);
-
-            var task = Task.Factory.FromAsync(beginConnect, _socket.EndConnect, this);
-            task.ContinueWith(t => callback(true), TaskContinuationOptions.NotOnFaulted)
-                .ContinueWith(t => callback(false), TaskContinuationOptions.OnlyOnFaulted);
-            task.ContinueWith(t => callback(false), TaskContinuationOptions.OnlyOnFaulted);
+            var connectAsyncEventArgs = GetConnectSocketAsyncEventArgs();
+            connectAsyncEventArgs.UserToken = callback;
+            connectAsyncEventArgs.RemoteEndPoint = Endpoint;
+            var async = _socket.ConnectAsync(connectAsyncEventArgs);
+            
+            if (!async)
+            {
+                ConnectCompleted(null, connectAsyncEventArgs);
+            }
         }
 
         internal void Close()
         {
             _socket.Close();
-        }
-
-        private T CallbackOnError<T>(Func<T> func, Action<bool> callback)
-        {
-            try
-            {
-                return func();
-            }
-            catch (Exception)
-            {
-                callback(false);
-                return default(T);
-            }
         }
     }
 }

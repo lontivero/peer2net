@@ -28,11 +28,13 @@ namespace P2PNet.BufferManager
 {
     internal class Buffer
     {
-        private ArraySegment<byte> _segment;
+        private readonly ArraySegment<byte> _segment;
+        private readonly List<ArraySegment<byte>> _arrayOfSegments;
 
         public Buffer(ArraySegment<byte> segment)
         {
             _segment = segment;
+            _arrayOfSegments = new List<ArraySegment<byte>> { _segment };
         }
 
         public void CopyTo(byte[] array)
@@ -46,14 +48,14 @@ namespace P2PNet.BufferManager
             get { return _segment.Count; }
         }
 
-        public ArraySegment<byte> Segment
+        internal ArraySegment<byte> Segment
         {
             get { return _segment; }
         }
 
         public List<ArraySegment<byte>> ToArraySegmentList()
         {
-            return new List<ArraySegment<byte>> {_segment};
+            return _arrayOfSegments;
         }
 
     }

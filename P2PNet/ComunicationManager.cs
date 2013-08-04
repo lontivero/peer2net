@@ -40,6 +40,7 @@ namespace P2PNet
         private readonly Listener _listener;
         private readonly ClientManager _clientManager;
         private readonly ClientWorker _worker;
+        private readonly BufferAllocator _bufferAllocator;
         private readonly ConnectionIoActor _ioActor;
         private readonly ConcurrentDictionary<IPEndPoint, Peer> _peers;
         private readonly SpeedWatcher _globalReceiveSpeedWatcher;
@@ -49,6 +50,7 @@ namespace P2PNet
         {
             _listener = listener;
             _clientManager = clientManager;
+            _bufferAllocator = new BufferAllocator(new byte[1 << 16]);
             _worker = new ClientWorker();
             _ioActor = new ConnectionIoActor(_worker);
             _peers = new ConcurrentDictionary<IPEndPoint, Peer>();
@@ -75,7 +77,9 @@ namespace P2PNet
         public void Connect(IPEndPoint endpoint)
         {
             Guard.NotNull(endpoint, "endpoint");
-            _ioActor.EnqueueConnect(endpoint, OnConnected, OnConnectError);
+            var connection = new Connection(endpoint);
+
+            _ioActor.EnqueueConnect(connection, OnConnected, OnConnectError);
         }
 
         public void Receive(int bytes, IPEndPoint endpoint)

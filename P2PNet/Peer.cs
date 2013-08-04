@@ -36,6 +36,7 @@ namespace P2PNet
         private readonly BandwidthController _sendBandwidthController;
         private readonly SpeedWatcher _sendSpeedWatcher;
         private readonly SpeedWatcher _receiveSpeedWatcher;
+        private readonly Uri _uri;
 
         internal Connection Connection
         {
@@ -44,7 +45,7 @@ namespace P2PNet
 
         public Uri Uri
         {
-            get { return _connection.Uri; }
+            get { return _uri; }
         }
 
         public IPEndPoint EndPoint
@@ -85,6 +86,7 @@ namespace P2PNet
             _receiveBandwidthController = new BandwidthController();
             _sendBandwidthController = new BandwidthController();
             _statistics = new PeerStat();
+            _uri = new Uri("tcp://" + EndPoint.Address + ':' + EndPoint.Port);
         }
     }
 }

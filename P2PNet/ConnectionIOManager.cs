@@ -154,9 +154,8 @@ namespace P2PNet
             Receive(IOState.Create(buffer, connection, bandwidthController, onSuccess, onFailure));
         }
 
-        public void EnqueueConnect(IPEndPoint endpoint, Action<Connection> onSuccess, Action<Connection> onFailure )
+        public void EnqueueConnect(Connection connection, Action<Connection> onSuccess, Action<Connection> onFailure )
         {
-            var connection = new Connection(endpoint);
             Connect(ConnectState.Create(connection, onSuccess, onFailure));
         }
 
