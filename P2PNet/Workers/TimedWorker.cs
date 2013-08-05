@@ -45,7 +45,6 @@ namespace P2PNet.Workers
             Task.Factory.StartNew(() =>
                 {
                     ScheduledAction scheduledAction = null;
-                    var runTime = new DateTime();
 
                     while (!_cancellationTokenSource.Token.IsCancellationRequested)
                     {
@@ -59,7 +58,7 @@ namespace P2PNet.Workers
                         TimeSpan timeToWait;
                         if (any)
                         {
-                            runTime = scheduledAction.NextExecutionDate;
+                            DateTime runTime = scheduledAction.NextExecutionDate;
                             var dT = runTime - DateTime.UtcNow;
                             timeToWait = dT > TimeSpan.Zero ? dT : TimeSpan.Zero;
                         }
@@ -68,14 +67,16 @@ namespace P2PNet.Workers
                             timeToWait = TimeSpan.FromMilliseconds(-1);
                         }
 
-                        if (!_resetEvent.WaitOne(timeToWait, false))
+                        if (_resetEvent.WaitOne(timeToWait, false)) continue;
+
+                        Debug.Assert(scheduledAction != null, "scheduledAction != null");
+                        scheduledAction.Execute();
+                        lock (_actions)
                         {
-                            Debug.Assert(scheduledAction != null, "scheduledAction != null");
-                            scheduledAction.Execute();
-                            lock (_actions)
+                            Remove(scheduledAction);
+                            if (scheduledAction.Repeat)
                             {
-                                Remove(scheduledAction);
-                                Queue(scheduledAction.Action, scheduledAction.Interval);
+                                QueueForever(scheduledAction.Action, scheduledAction.Interval);
                             }
                         }
                     }
@@ -96,9 +97,18 @@ namespace P2PNet.Workers
             }
         }
 
-        public void Queue(Action action, TimeSpan interval)
+        public void QueueForever(Action action, TimeSpan interval)
         {
-            var scheduledAction = ScheduledAction.Create(action, interval, DateTime.UtcNow + interval);
+            QueueInternal(ScheduledAction.Create(action, interval, true));
+        }
+
+        public void QueueOneTime(Action action, TimeSpan interval)
+        {
+            QueueInternal(ScheduledAction.Create(action, interval, false));
+        }
+
+        private void QueueInternal(ScheduledAction scheduledAction)
+        {
             lock (_actions)
             {
                 var pos = _actions.BinarySearch(scheduledAction);

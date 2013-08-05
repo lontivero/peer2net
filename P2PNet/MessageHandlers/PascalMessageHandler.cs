@@ -63,6 +63,7 @@ namespace P2PNet.MessageHandlers
             get { return _pendingBytes; }
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1062:Validate arguments of public methods", MessageId = "0")]
         public void ProcessIncomingData(byte[] data)
         {
             Guard.NotNull(data, "data");
@@ -77,6 +78,7 @@ namespace P2PNet.MessageHandlers
             }
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1062:Validate arguments of public methods", MessageId = "0")]
         public static byte[] FormatMessage(byte[] message)
         {
             Guard.NotNull(message, "message");

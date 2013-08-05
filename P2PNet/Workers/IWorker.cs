@@ -34,7 +34,8 @@ namespace P2PNet.Workers
 
     internal interface IWorkScheduler
     {
-        void Queue(Action action, TimeSpan interval);
+        void QueueForever(Action action, TimeSpan interval);
+        void QueueOneTime(Action action, TimeSpan interval);
     }
 
 }

@@ -22,7 +22,6 @@
 // <summary></summary>
 
 using System;
-using System.Net;
 using P2PNet.BufferManager;
 using P2PNet.Progress;
 using P2PNet.Workers;
@@ -43,8 +42,27 @@ namespace P2PNet
 
             _bufferAllocator = new BufferAllocator(new byte[1 << 16]);
             _worker = worker;
-            _worker.Queue(SendEnqueued, TimeSpan.FromMilliseconds(10));
-            _worker.Queue(ReceiveEnqueued, TimeSpan.FromMilliseconds(9));
+            _worker.QueueForever(SendEnqueued, TimeSpan.FromMilliseconds(10));
+            _worker.QueueForever(ReceiveEnqueued, TimeSpan.FromMilliseconds(9));
+        }
+
+        public void EnqueueConnect(Connection connection, Action<Connection> onSuccess, Action<Connection> onFailure)
+        {
+            Connect(ConnectState.Create(connection, onSuccess, onFailure));
+        }
+
+        public void EnqueueSend(byte[] data, Connection connection, BandwidthController bandwidthController,
+                                Action<Connection, byte[]> onSuccess, Action<Connection> onFailure)
+        {
+            var buffer = _bufferAllocator.AllocateAndCopy(data);
+            Send(IOState.Create(buffer, connection, bandwidthController, onSuccess, onFailure));
+        }
+
+        public void EnqueueReceive(int bytes, Connection connection, BandwidthController bandwidthController,
+                                   Action<Connection, byte[]> onSuccess, Action<Connection> onFailure)
+        {
+            var buffer = _bufferAllocator.Allocate(bytes);
+            Receive(IOState.Create(buffer, connection, bandwidthController, onSuccess, onFailure));
         }
 
         private void ReceiveEnqueued()
@@ -62,6 +80,28 @@ namespace P2PNet
             {
                 Send(_sendQueue.Take());
             }
+        }
+
+        private void Connect(ConnectState state)
+        {
+            _worker.QueueOneTime(() =>
+            {
+                if (!state.Connection.IsConnected)
+                {
+                    state.Connection.Close();
+                }
+            }, TimeSpan.FromSeconds(2));
+            state.Connection.Connect(success =>
+            {
+                if (success)
+                {
+                    state.SuccessCallback();
+                }
+                else
+                {
+                    state.FailureCallback();
+                }
+            });
         }
 
         private void Send(IOState state)
@@ -136,40 +176,6 @@ namespace P2PNet
                     {
                         state.Release();
                         _bufferAllocator.Free(state.InternalBuffer);
-                    }
-                });
-        }
-
-        public void EnqueueSend(byte[] data, Connection connection, BandwidthController bandwidthController,
-                                Action<Connection, byte[]> onSuccess, Action<Connection> onFailure)
-        {
-            var buffer = _bufferAllocator.AllocateAndCopy(data);
-            Send(IOState.Create(buffer, connection, bandwidthController, onSuccess, onFailure));
-        }
-
-        public void EnqueueReceive(int bytes, Connection connection, BandwidthController bandwidthController,
-                                   Action<Connection, byte[]> onSuccess, Action<Connection> onFailure)
-        {
-            var buffer = _bufferAllocator.Allocate(bytes);
-            Receive(IOState.Create(buffer, connection, bandwidthController, onSuccess, onFailure));
-        }
-
-        public void EnqueueConnect(Connection connection, Action<Connection> onSuccess, Action<Connection> onFailure )
-        {
-            Connect(ConnectState.Create(connection, onSuccess, onFailure));
-        }
-
-        private void Connect(ConnectState state)
-        {
-            state.Connection.Connect(success =>
-                {
-                    if(success)
-                    {
-                        state.SuccessCallback();
-                    }
-                    else
-                    {
-                        state.FailureCallback();
                     }
                 });
         }

@@ -22,7 +22,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <RunCodeAnalysis>true</RunCodeAnalysis>
-    <CodeAnalysisRuleSet>BasicDesignGuidelineRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -40,7 +40,7 @@
     <Compile Include="BufferManager\BuddyBufferAllocator.cs" />
     <Compile Include="BufferManager\BufferAllocator.cs" />
     <Compile Include="ClientManager.cs" />
-    <Compile Include="ComunicationManager.cs" />
+    <Compile Include="CommunicationManager.cs" />
     <Compile Include="Connection.cs" />
     <Compile Include="ConnectState.cs" />
     <Compile Include="IClientManager.cs" />
@@ -54,6 +54,7 @@
     <Compile Include="Progress\BandwidthController.cs" />
     <Compile Include="BufferManager\SpeedWatcher.cs" />
     <Compile Include="MessageHandlers\EotMessageHandler.cs" />
+    <Compile Include="Utils\BlockingPool.cs" />
     <Compile Include="Utils\Guard.cs" />
     <Compile Include="Workers\BackgroundWorker.cs" />
     <Compile Include="Workers\BlockingQueue.cs" />

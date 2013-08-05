@@ -27,6 +27,7 @@ using System.Collections.Generic;
 using System.Net;
 using P2PNet.BufferManager;
 using P2PNet.EventArgs;
+using P2PNet.Progress;
 using P2PNet.Utils;
 using P2PNet.Workers;
 
@@ -35,22 +36,20 @@ namespace P2PNet
     /// <summary>
     /// 
     /// </summary>
-    public class ComunicationManager
+    public class CommunicationManager
     {
         private readonly Listener _listener;
         private readonly ClientManager _clientManager;
         private readonly ClientWorker _worker;
-        private readonly BufferAllocator _bufferAllocator;
         private readonly ConnectionIoActor _ioActor;
         private readonly ConcurrentDictionary<IPEndPoint, Peer> _peers;
         private readonly SpeedWatcher _globalReceiveSpeedWatcher;
         private readonly SpeedWatcher _globalSendSpeedWatcher;
 
-        public ComunicationManager(Listener listener, ClientManager clientManager)
+        public CommunicationManager(Listener listener, ClientManager clientManager)
         {
             _listener = listener;
             _clientManager = clientManager;
-            _bufferAllocator = new BufferAllocator(new byte[1 << 16]);
             _worker = new ClientWorker();
             _ioActor = new ConnectionIoActor(_worker);
             _peers = new ConcurrentDictionary<IPEndPoint, Peer>();
@@ -58,7 +57,7 @@ namespace P2PNet
             _globalReceiveSpeedWatcher = new SpeedWatcher();
             _globalSendSpeedWatcher = new SpeedWatcher();
 
-            _worker.Queue(CalculateSpeed, TimeSpan.FromSeconds(0.5));
+            _worker.QueueForever(CalculateSpeed, TimeSpan.FromSeconds(0.5));
             _worker.Start();
 
             _listener.ConnectionRequested += NewPeerConnected;
@@ -104,6 +103,7 @@ namespace P2PNet
         public void Send(byte[] message, IEnumerable<IPEndPoint> endpoints)
         {
             Guard.NotNull(message, "message");
+            Guard.NotNull(endpoints, "endpoints");
 
             foreach (var endpoint in endpoints)
             {
@@ -149,7 +149,7 @@ namespace P2PNet
 
         private void OnConnectError(Connection connection)
         {
-            CloseConnection(connection);
+            _clientManager.OnPeerConnectFailure(connection.Endpoint);
         }
 
         private void OnDataArrive(Connection connection, byte[] data)

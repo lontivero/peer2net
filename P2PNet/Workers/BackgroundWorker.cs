@@ -31,14 +31,12 @@ namespace P2PNet.Workers
     {
         private readonly CancellationTokenSource _cancellationTokenSource;
         private readonly BlockingQueue<Action> _queue;
-        private readonly PauseTokenSource _pauseTokenSource;
 
 
         public BackgroundWorker()
         {
             _queue = new BlockingQueue<Action>();
             _cancellationTokenSource = new CancellationTokenSource();
-            _pauseTokenSource = new PauseTokenSource();
 
             Start();
         }
@@ -47,11 +45,10 @@ namespace P2PNet.Workers
         {
             Task.Factory.StartNew(() =>
                 {
-                    while (true /*!_cancellationTokenSource.Token.IsCancellationRequested*/)
+                    while (!_cancellationTokenSource.Token.IsCancellationRequested)
                     {
                         var action = _queue.Take();
                         action();
-//                        _pauseTokenSource.WaitWhilePausedAsync().Wait();
                     }
                 }, _cancellationTokenSource.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
         }

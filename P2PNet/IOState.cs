@@ -30,7 +30,7 @@ namespace P2PNet
 {
     internal class IOState
     {
-        private static readonly Queue<IOState> _pool = new Queue<IOState>();
+        private static readonly Queue<IOState> Pool = new Queue<IOState>();
 
         private Connection _connection;
         private BandwidthController _bandwidthController;
@@ -86,7 +86,7 @@ namespace P2PNet
 
         public static IOState Create(Buffer buffer, Connection connection, BandwidthController bandwidthController, Action<Connection, byte[]> onSuccess, Action<Connection> onFailure)
         {
-            var state = _pool.Count > 0 ? _pool.Dequeue() : new IOState();
+            var state = Pool.Count > 0 ? Pool.Dequeue() : new IOState();
 
             state._buffer = buffer;
             state._bytes = buffer.Size;
@@ -121,7 +121,7 @@ namespace P2PNet
 
         public void Release()
         {
-           _pool.Enqueue(this);
+           Pool.Enqueue(this);
         }
     }
 }

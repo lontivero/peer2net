@@ -24,6 +24,7 @@
 using System;
 using System.Net;
 using System.Net.Sockets;
+using P2PNet.Utils;
 using P2PNet.Workers;
 using Buffer = P2PNet.BufferManager.Buffer;
 
@@ -31,8 +32,20 @@ namespace P2PNet
 {
     internal class Connection
     {
-        private static readonly BlockingQueue<SocketAsyncEventArgs> _sendRecvSaeaPool = new BlockingQueue<SocketAsyncEventArgs>();
-        private static readonly BlockingQueue<SocketAsyncEventArgs> _connectSaeaPool = new BlockingQueue<SocketAsyncEventArgs>();
+        private static readonly BlockingPool<SocketAsyncEventArgs> SendRecvSaeaPool =
+            new BlockingPool<SocketAsyncEventArgs>(() =>
+            {
+                var e = new SocketAsyncEventArgs();
+                e.Completed += SendRecvCompleted;
+                return e;
+            });
+        private static readonly BlockingPool<SocketAsyncEventArgs> ConnectSaeaPool =
+            new BlockingPool<SocketAsyncEventArgs>(() =>
+            {
+                var e = new SocketAsyncEventArgs();
+                e.Completed += ConnectCompleted;
+                return e;
+            });
 
         private readonly Socket _socket;
         private readonly IPEndPoint _endpoint;
@@ -42,6 +55,13 @@ namespace P2PNet
             get { return _endpoint; }
         }
 
+        public bool IsConnected
+        {
+            get { return _socket.Connected; }
+        }
+
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Reliability", "CA2000:Dispose objects before losing scope", 
+            Justification = "The framework manages the socket lifetime")]
         public Connection(IPEndPoint endpoint)
             : this(new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp), endpoint)
         {}
@@ -56,32 +76,8 @@ namespace P2PNet
             _endpoint = endpoint;
         }
 
-        private SocketAsyncEventArgs GetSendRecvSocketAsyncEventArgs()
-        {
-            return _sendRecvSaeaPool.Count > 0
-                    ? _sendRecvSaeaPool.Take()
-                    : new Func<SocketAsyncEventArgs>(() =>
-                    {
-                        var e = new SocketAsyncEventArgs();
-                        e.Completed += SendRecvCompleted;
-                        return e;
-                    })();
-        }
 
-        private SocketAsyncEventArgs GetConnectSocketAsyncEventArgs()
-        {
-            return _connectSaeaPool.Count > 0
-                    ? _connectSaeaPool.Take()
-                    : new Func<SocketAsyncEventArgs>(() =>
-                    {
-                        var e = new SocketAsyncEventArgs();
-                        e.Completed += ConnectCompleted;
-                        return e;
-                    })();
-        }
-
-
-        private void SendRecvCompleted(object sender, SocketAsyncEventArgs socketAsyncEventArgs)
+        private static void SendRecvCompleted(object sender, SocketAsyncEventArgs socketAsyncEventArgs)
         {
             try
             {
@@ -98,11 +94,11 @@ namespace P2PNet
             }
             finally
             {
-                _sendRecvSaeaPool.Add(socketAsyncEventArgs);
+                SendRecvSaeaPool.Add(socketAsyncEventArgs);
             }
         }
 
-        private void ConnectCompleted(object sender, SocketAsyncEventArgs socketAsyncEventArgs)
+        private static void ConnectCompleted(object sender, SocketAsyncEventArgs socketAsyncEventArgs)
         {
             try
             {
@@ -112,13 +108,13 @@ namespace P2PNet
             }
             finally
             {
-                _connectSaeaPool.Add(socketAsyncEventArgs);
+                ConnectSaeaPool.Add(socketAsyncEventArgs);
             }
         }
 
         internal void Receive(Buffer buffer, Action<int, bool> callback)
         {
-            var recvAsyncEventArgs = GetSendRecvSocketAsyncEventArgs();
+            var recvAsyncEventArgs = SendRecvSaeaPool.Take();
             recvAsyncEventArgs.UserToken = callback;
             recvAsyncEventArgs.BufferList = buffer.ToArraySegmentList();
             var async = _socket.ReceiveAsync(recvAsyncEventArgs);
@@ -131,7 +127,7 @@ namespace P2PNet
 
         internal void Send(Buffer buffer, Action<int, bool> callback)
         {
-            var sendAsyncEventArgs = GetSendRecvSocketAsyncEventArgs();
+            var sendAsyncEventArgs = SendRecvSaeaPool.Take();
             sendAsyncEventArgs.UserToken = callback;
             sendAsyncEventArgs.BufferList = buffer.ToArraySegmentList();
             var async = _socket.SendAsync(sendAsyncEventArgs);
@@ -144,7 +140,7 @@ namespace P2PNet
 
         internal void Connect(Action<bool> callback)
         {
-            var connectAsyncEventArgs = GetConnectSocketAsyncEventArgs();
+            var connectAsyncEventArgs = ConnectSaeaPool.Take();
             connectAsyncEventArgs.UserToken = callback;
             connectAsyncEventArgs.RemoteEndPoint = Endpoint;
             var async = _socket.ConnectAsync(connectAsyncEventArgs);

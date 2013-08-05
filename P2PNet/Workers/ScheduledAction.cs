@@ -28,10 +28,11 @@ namespace P2PNet.Workers
 {
     internal class ScheduledAction : IComparable<ScheduledAction>
     {
-        private static readonly Queue<ScheduledAction> _pool = new Queue<ScheduledAction>();
+        private static readonly Queue<ScheduledAction> Pool = new Queue<ScheduledAction>();
         public Action Action { get; private set; }
         public TimeSpan Interval { get; private set; }
         public DateTime NextExecutionDate { get; set; }
+        public bool Repeat { get; private set; }
 
         private ScheduledAction(){}
 
@@ -40,6 +41,8 @@ namespace P2PNet.Workers
             Action();
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1062:Validate arguments of public methods",
+            Justification = "NextExecutionDate.CompareTo does the job")]
         public int CompareTo(ScheduledAction other)
         {
             if (other == this) return 0;
@@ -48,18 +51,19 @@ namespace P2PNet.Workers
             return (diff >= 0) ? 1 : -1;
         }
 
-        public static ScheduledAction Create(Action action, TimeSpan interval, DateTime nextExecutionDate)
+        public static ScheduledAction Create(Action action, TimeSpan interval, bool repeat)
         {
-            var sa = _pool.Count > 0 ? _pool.Dequeue() : new ScheduledAction();
+            var sa = Pool.Count > 0 ? Pool.Dequeue() : new ScheduledAction();
             sa.Action = action;
             sa.Interval = interval;
-            sa.NextExecutionDate = nextExecutionDate;
+            sa.NextExecutionDate = DateTime.UtcNow + interval;
+            sa.Repeat = repeat;
             return sa;
         }
 
         public void Release()
         {
-            _pool.Enqueue(this);
+            Pool.Enqueue(this);
         }
     }
 }

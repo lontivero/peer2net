@@ -22,12 +22,9 @@
 // <summary></summary>
 
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
 
-namespace P2PNet
+namespace P2PNet.Progress
 {
     class PerformanceCounters
     {
@@ -37,9 +34,9 @@ namespace P2PNet
         private const string BufferMemoryInUseCounterName = "buffer memory in use";
         private const string BytesReceivedCounterName = "# bytes received";
 
-        private static readonly Lazy<PerformanceCounter> _incommingConnections = new Lazy<PerformanceCounter>(() => CreateCounter(IncommingConnectionsCounterName));
-        private static readonly Lazy<PerformanceCounter> _bufferMemoryUse = new Lazy<PerformanceCounter>(() => CreateCounter(BufferMemoryInUseCounterName));
-        private static readonly Lazy<PerformanceCounter> _bytesReceived = new Lazy<PerformanceCounter>(() => CreateCounter(BytesReceivedCounterName));
+        private static readonly Lazy<PerformanceCounter> IncommingConnectionsField = new Lazy<PerformanceCounter>(() => CreateCounter(IncommingConnectionsCounterName));
+        private static readonly Lazy<PerformanceCounter> BufferMemoryUseField = new Lazy<PerformanceCounter>(() => CreateCounter(BufferMemoryInUseCounterName));
+        private static readonly Lazy<PerformanceCounter> BytesReceivedField = new Lazy<PerformanceCounter>(() => CreateCounter(BytesReceivedCounterName));
 
         private static PerformanceCounter CreateCounter(string name)
         {
@@ -53,20 +50,20 @@ namespace P2PNet
 
         internal static PerformanceCounter IncommingConnections
         {
-            get { return _incommingConnections.Value; }    
+            get { return IncommingConnectionsField.Value; }    
         }
 
         internal static PerformanceCounter BufferMemoryUsed
         {
-            get { return _bufferMemoryUse.Value; }    
+            get { return BufferMemoryUseField.Value; }    
         }
 
         internal static PerformanceCounter BytesReceived
         {
-            get { return _bytesReceived.Value; }
+            get { return BytesReceivedField.Value; }
         }
 
-        private void RegisterPerformanceCounters()
+        private static void RegisterPerformanceCounters()
         {
             if (PerformanceCounterCategory.Exists(CategoryName)) return;
 

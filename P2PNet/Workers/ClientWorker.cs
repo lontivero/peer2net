@@ -41,9 +41,14 @@ namespace P2PNet.Workers
             _backgroundWorker.Queue(action);
         }
 
-        public void Queue(Action action, TimeSpan interval)
+        public void QueueForever(Action action, TimeSpan interval)
         {
-            _timedWorker.Queue(() => _backgroundWorker.Queue(action), interval);
+            _timedWorker.QueueForever(() => _backgroundWorker.Queue(action), interval);
+        }
+
+        public void QueueOneTime(Action action, TimeSpan interval)
+        {
+            _timedWorker.QueueOneTime(() => _backgroundWorker.Queue(action), interval);
         }
 
         public void Start()

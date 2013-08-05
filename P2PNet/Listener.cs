@@ -24,7 +24,6 @@
 using System;
 using System.Net;
 using System.Net.Sockets;
-using System.Threading.Tasks;
 using P2PNet.EventArgs;
 using P2PNet.Utils;
 
@@ -32,6 +31,13 @@ namespace P2PNet
 {
     public class Listener
     {
+        private static readonly BlockingPool<SocketAsyncEventArgs> ConnectSaeaPool =
+            new BlockingPool<SocketAsyncEventArgs>(() =>
+            {
+                var e = new SocketAsyncEventArgs();
+                return e;
+            });
+
         private readonly IPEndPoint _endpoint;
         private readonly Socket _listener;
 
@@ -62,20 +68,30 @@ namespace P2PNet
 
         private void ListenForConnections()
         {
+            var saea = ConnectSaeaPool.Take();
+            saea.Completed += ConnectCompleted;
+            var async = _listener.AcceptAsync(saea);
+
+            if (!async)
+            {
+                ConnectCompleted(null, saea);
+            }
+        }
+
+        private void ConnectCompleted(object sender, SocketAsyncEventArgs saea)
+        {
             try
             {
-                Task.Factory.FromAsync<Socket>(_listener.BeginAccept, _listener.EndAccept, _listener)
-                    .ContinueWith(task =>
-                        {
-                            if (task.IsFaulted) return;
-                            ListenForConnections();
-
-                            var newSocket = task.Result;
-                            RaiseConnectionRequestedEvent(new ConnectionEventArgs(newSocket));
-                        }, TaskContinuationOptions.OnlyOnRanToCompletion);
+                if (saea.SocketError == SocketError.Success)
+                {
+                    RaiseConnectionRequestedEvent(new ConnectionEventArgs(saea.AcceptSocket));
+                }
             }
-            catch (ObjectDisposedException)
+            finally
             {
+                saea.AcceptSocket = null;
+                ConnectSaeaPool.Add(saea);
+                ListenForConnections();
             }
         }
 

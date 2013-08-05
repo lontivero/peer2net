@@ -32,7 +32,7 @@ namespace P2PNet.MessageHandlers
             _data = data;
         }
 
-        public byte[] Packet
+        public byte[] Data
         {
             get { return _data; }
         }

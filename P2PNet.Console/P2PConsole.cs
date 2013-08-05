@@ -33,9 +33,9 @@ namespace P2PNet.NodeConsole
     {
         private readonly PascalMessageHandler _messageHandler;
         private readonly Peer _peer;
-        private readonly ComunicationManager _comunicationManager;
+        private readonly CommunicationManager _comunicationManager;
 
-        public ChatSession(Peer peer, ComunicationManager comunicationManager)
+        public ChatSession(Peer peer, CommunicationManager comunicationManager)
         {
             _comunicationManager = comunicationManager;
             _peer = peer;
@@ -47,7 +47,7 @@ namespace P2PNet.NodeConsole
         private void OnMessageReceived(object sender, MessageReceivedEventArgs packetReceivedEventArgs)
         {
             Console.WriteLine("{0} wrote:", _peer.Uri);
-            Console.WriteLine("\t{0}\n", GetString(packetReceivedEventArgs.Packet));
+            Console.WriteLine("\t{0}\n", GetString(packetReceivedEventArgs.Data));
         }
 
         public void ProcessInput(byte[] data)
@@ -66,7 +66,7 @@ namespace P2PNet.NodeConsole
     class P2PConsole : ClientManager
     {
         private readonly Settings _settings;
-        private readonly ComunicationManager _comunicationManager;
+        private readonly CommunicationManager _comunicationManager;
         private readonly Listener _listener;
         private readonly Dictionary<IPEndPoint, ChatSession> _sessions;
  
@@ -76,7 +76,7 @@ namespace P2PNet.NodeConsole
             _sessions = new Dictionary<IPEndPoint, ChatSession>();
             _settings = settings;
             _listener = new Listener(settings.Port);
-            _comunicationManager = new ComunicationManager(_listener, this);
+            _comunicationManager = new CommunicationManager(_listener, this);
         }
 
         public void Start()
@@ -139,6 +139,11 @@ namespace P2PNet.NodeConsole
             var session = new ChatSession(peer, _comunicationManager);
             _sessions.Add(peer.EndPoint, session);
             Console.WriteLine("{0} connected", peer.EndPoint );
+        }
+
+        public override void ConnectFailure(IPEndPoint endpoint)
+        {
+            Console.WriteLine("{0} connection attempt failed!", endpoint);
         }
 
         public override void Closed(Peer peer)

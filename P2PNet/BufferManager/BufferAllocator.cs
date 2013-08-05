@@ -22,6 +22,7 @@
 // <summary></summary>
 
 using System;
+using P2PNet.Progress;
 
 namespace P2PNet.BufferManager
 {

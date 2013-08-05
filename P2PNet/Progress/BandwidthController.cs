@@ -22,10 +22,6 @@
 // <summary></summary>
 
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
 using P2PNet.Utils;
 
 namespace P2PNet.Progress

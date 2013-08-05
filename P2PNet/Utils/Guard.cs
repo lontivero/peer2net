@@ -22,10 +22,8 @@
 // <summary></summary>
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Net;
 
 namespace P2PNet.Utils
 {
@@ -54,7 +52,7 @@ namespace P2PNet.Utils
             if (val < min) throw new ArgumentOutOfRangeException(paramName);
         }
 
-        public static void ContainsKey<T,Q>(IDictionary<T, Q> dict, T key, string message)
+        public static void ContainsKey<T,TQ>(IDictionary<T, TQ> dict, T key, string message)
         {
             if(!dict.ContainsKey(key)) throw new ArgumentException(message);
         }

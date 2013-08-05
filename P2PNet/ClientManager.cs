@@ -21,6 +21,7 @@
 
 // <summary></summary>
 
+using System.Net;
 using P2PNet.Workers;
 
 namespace P2PNet
@@ -36,6 +37,7 @@ namespace P2PNet
         }
 
         public abstract void Connected(Peer peer);
+        public abstract void ConnectFailure(IPEndPoint endpoint);
         public abstract void Closed(Peer peer);
         public abstract void DataSent(Peer peer, byte[] data);
         public abstract void DataReceived(Peer peer, byte[] data);
@@ -58,6 +60,11 @@ namespace P2PNet
         internal void OnClosed(Peer peer)
         {
             _worker.Queue(() => Closed(peer));
+        }
+
+        public void OnPeerConnectFailure(IPEndPoint endpoint)
+        {
+            _worker.Queue(() => ConnectFailure(endpoint));
         }
     }
 }
