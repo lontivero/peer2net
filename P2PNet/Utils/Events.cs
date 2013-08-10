@@ -24,7 +24,7 @@
 using System;
 using System.Threading.Tasks;
 
-namespace P2PNet.Utils
+namespace Peer2Net.Utils
 {
     internal static class Events
     {

@@ -24,7 +24,7 @@
 using System.Collections.Generic;
 using System.Threading;
 
-namespace P2PNet.Workers
+namespace Peer2Net.Workers
 {
     class BlockingQueue<T>
     {

@@ -23,7 +23,7 @@
 
 using System;
 
-namespace P2PNet
+namespace Peer2Net
 {
     internal class ConnectState
     {

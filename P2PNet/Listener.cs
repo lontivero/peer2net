@@ -24,10 +24,10 @@
 using System;
 using System.Net;
 using System.Net.Sockets;
-using P2PNet.EventArgs;
-using P2PNet.Utils;
+using Peer2Net.EventArgs;
+using Peer2Net.Utils;
 
-namespace P2PNet
+namespace Peer2Net
 {
     public class Listener
     {

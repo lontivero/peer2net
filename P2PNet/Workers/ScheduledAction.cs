@@ -24,7 +24,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace P2PNet.Workers
+namespace Peer2Net.Workers
 {
     internal class ScheduledAction : IComparable<ScheduledAction>
     {

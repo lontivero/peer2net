@@ -21,12 +21,10 @@
 
 // <summary></summary>
 
-using System.Linq;
 using NUnit.Framework;
-using P2PNet.BufferManager;
-using Buffer = P2PNet.BufferManager.Buffer;
+using Peer2Net.BufferManager;
 
-namespace P2PNet.Tests
+namespace Peer2Net.Tests
 {
     [TestFixture]
     public class BufferAllocatorTests
@@ -36,7 +34,7 @@ namespace P2PNet.Tests
         public void Test1 ()
         {
             var memeory = new byte[256];
-            var bufferManager = new P2PNet.BufferManager.BufferAllocator(memeory);
+            var bufferManager = new BufferAllocator(memeory);
             var buffer = bufferManager.Allocate(64);
             Assert.AreEqual(0, buffer.Segment.Offset);
             Assert.AreEqual(64, buffer.Segment.Count);
@@ -46,7 +44,7 @@ namespace P2PNet.Tests
         public void Test2()
         {
             var memeory = new byte[256];
-            var bufferManager = new P2PNet.BufferManager.BufferAllocator(memeory);
+            var bufferManager = new BufferAllocator(memeory);
             var buffer1 = bufferManager.Allocate(64);
             var buffer2 = bufferManager.Allocate(128);
             Assert.AreEqual(128, buffer2.Segment.Offset);
@@ -70,7 +68,7 @@ namespace P2PNet.Tests
         public void Test4()
         {
             var memeory = new byte[256];
-            var bufferManager = new P2PNet.BufferManager.BufferAllocator(memeory);
+            var bufferManager = new BufferAllocator(memeory);
 
             bufferManager.Allocate(32); //  0 - 31
             bufferManager.Allocate(32); // 32 - 63

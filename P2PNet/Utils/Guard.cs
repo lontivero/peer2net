@@ -25,7 +25,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 
-namespace P2PNet.Utils
+namespace Peer2Net.Utils
 {
     static class Guard
     {

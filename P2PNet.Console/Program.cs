@@ -24,7 +24,7 @@
 using System;
 using Mono.Options;
 
-namespace P2PNet.NodeConsole
+namespace Peer2Net.ConsoleChat
 {
     static class Program
     {

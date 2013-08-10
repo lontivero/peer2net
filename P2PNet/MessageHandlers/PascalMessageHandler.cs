@@ -23,9 +23,9 @@
 
 using System;
 using System.Collections.Generic;
-using P2PNet.Utils;
+using Peer2Net.Utils;
 
-namespace P2PNet.MessageHandlers
+namespace Peer2Net.MessageHandlers
 {
     public class PascalMessageHandler : IStreamHandler
     {

@@ -24,7 +24,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace P2PNet.BufferManager
+namespace Peer2Net.BufferManager
 {
     internal class Buffer
     {

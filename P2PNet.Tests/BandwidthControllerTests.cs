@@ -24,10 +24,10 @@
 using System;
 using System.Diagnostics;
 using NUnit.Framework;
-using P2PNet.BufferManager;
-using P2PNet.Progress;
+using Peer2Net.BufferManager;
+using Peer2Net.Progress;
 
-namespace P2PNet.Tests
+namespace Peer2Net.Tests
 {
     [TestFixture]
     public class BandwidthControllerTests

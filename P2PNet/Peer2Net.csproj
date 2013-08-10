@@ -8,8 +8,8 @@
     <ProjectGuid>{4F5330BB-6BE3-48A2-903D-A492BE05B2AB}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>P2PNet</RootNamespace>
-    <AssemblyName>P2PNet</AssemblyName>
+    <RootNamespace>Peer2Net</RootNamespace>
+    <AssemblyName>Peer2Net</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>

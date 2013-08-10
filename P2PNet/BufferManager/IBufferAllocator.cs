@@ -21,7 +21,7 @@
 
 // <summary></summary>
 
-namespace P2PNet.BufferManager
+namespace Peer2Net.BufferManager
 {
     interface IBufferAllocator
     {

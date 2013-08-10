@@ -21,7 +21,7 @@
 
 // <summary></summary>
 
-namespace P2PNet.MessageHandlers
+namespace Peer2Net.MessageHandlers
 {
     public class MessageReceivedEventArgs : System.EventArgs
     {

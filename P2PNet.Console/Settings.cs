@@ -23,7 +23,7 @@
 
 using System;
 
-namespace P2PNet.NodeConsole
+namespace Peer2Net.ConsoleChat
 {
     class Settings
     {

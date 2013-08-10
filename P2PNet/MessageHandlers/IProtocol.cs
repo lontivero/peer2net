@@ -23,7 +23,7 @@
 
 using System;
 
-namespace P2PNet.MessageHandlers
+namespace Peer2Net.MessageHandlers
 {
     public interface IProtocol
     {

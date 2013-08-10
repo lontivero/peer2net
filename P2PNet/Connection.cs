@@ -24,11 +24,10 @@
 using System;
 using System.Net;
 using System.Net.Sockets;
-using P2PNet.Utils;
-using P2PNet.Workers;
-using Buffer = P2PNet.BufferManager.Buffer;
+using Peer2Net.Utils;
 
-namespace P2PNet
+
+namespace Peer2Net
 {
     internal class Connection
     {
@@ -112,7 +111,7 @@ namespace P2PNet
             }
         }
 
-        internal void Receive(Buffer buffer, Action<int, bool> callback)
+        internal void Receive(BufferManager.Buffer buffer, Action<int, bool> callback)
         {
             var recvAsyncEventArgs = SendRecvSaeaPool.Take();
             recvAsyncEventArgs.UserToken = callback;
@@ -125,7 +124,7 @@ namespace P2PNet
             }
         }
 
-        internal void Send(Buffer buffer, Action<int, bool> callback)
+        internal void Send(BufferManager.Buffer buffer, Action<int, bool> callback)
         {
             var sendAsyncEventArgs = SendRecvSaeaPool.Take();
             sendAsyncEventArgs.UserToken = callback;

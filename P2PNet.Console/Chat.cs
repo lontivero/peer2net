@@ -25,9 +25,9 @@ using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Text;
-using P2PNet.MessageHandlers;
+using Peer2Net.MessageHandlers;
 
-namespace P2PNet.NodeConsole
+namespace Peer2Net.ConsoleChat
 {
     class ChatSession
     {

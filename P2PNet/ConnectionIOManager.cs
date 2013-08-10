@@ -22,11 +22,11 @@
 // <summary></summary>
 
 using System;
-using P2PNet.BufferManager;
-using P2PNet.Progress;
-using P2PNet.Workers;
+using Peer2Net.BufferManager;
+using Peer2Net.Progress;
+using Peer2Net.Workers;
 
-namespace P2PNet
+namespace Peer2Net
 {
     internal class ConnectionIoActor
     {

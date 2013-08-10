@@ -27,7 +27,7 @@ using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace P2PNet.Workers
+namespace Peer2Net.Workers
 {
     internal class TimedWorker: IWorkScheduler
     {

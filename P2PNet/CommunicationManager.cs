@@ -25,13 +25,13 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Net;
-using P2PNet.BufferManager;
-using P2PNet.EventArgs;
-using P2PNet.Progress;
-using P2PNet.Utils;
-using P2PNet.Workers;
+using Peer2Net.BufferManager;
+using Peer2Net.EventArgs;
+using Peer2Net.Progress;
+using Peer2Net.Utils;
+using Peer2Net.Workers;
 
-namespace P2PNet
+namespace Peer2Net
 {
     /// <summary>
     /// 

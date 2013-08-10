@@ -23,7 +23,7 @@
 
 using System;
 
-namespace P2PNet.Workers
+namespace Peer2Net.Workers
 {
     internal interface IWorker
     {

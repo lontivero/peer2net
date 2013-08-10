@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace P2PNet.Utils
+namespace Peer2Net.Utils
 {
     class BlockingPool<T>
     {

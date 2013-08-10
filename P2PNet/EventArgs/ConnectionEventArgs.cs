@@ -23,7 +23,7 @@
 
 using System.Net.Sockets;
 
-namespace P2PNet.EventArgs
+namespace Peer2Net.EventArgs
 {
     internal class ConnectionEventArgs : System.EventArgs
     {

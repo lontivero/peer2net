@@ -22,9 +22,9 @@
 // <summary></summary>
 
 using System;
-using P2PNet.Utils;
+using Peer2Net.Utils;
 
-namespace P2PNet.Progress
+namespace Peer2Net.Progress
 {
     public class BandwidthController
     {

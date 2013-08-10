@@ -1,6 +1,6 @@
 using System;
 
-namespace P2PNet.Progress
+namespace Peer2Net.Progress
 {
     public interface IBandwidthController
     {

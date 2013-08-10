@@ -23,9 +23,9 @@
 
 using System;
 using NUnit.Framework;
-using P2PNet.Progress;
+using Peer2Net.Progress;
 
-namespace P2PNet.Tests
+namespace Peer2Net.Tests
 {
     [TestFixture]
     public class PidControllerTests

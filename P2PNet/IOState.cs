@@ -23,10 +23,9 @@
 
 using System;
 using System.Collections.Generic;
-using P2PNet.Progress;
-using Buffer = P2PNet.BufferManager.Buffer;
+using Peer2Net.Progress;
 
-namespace P2PNet
+namespace Peer2Net
 {
     internal class IOState
     {
@@ -35,7 +34,7 @@ namespace P2PNet
         private Connection _connection;
         private BandwidthController _bandwidthController;
         private int _bytes;
-        private Buffer _buffer;
+        private BufferManager.Buffer _buffer;
         private Action<Connection, byte[]> _onSuccess;
         private Action<Connection> _onFailure;
         private int _pendingBytes;
@@ -66,9 +65,9 @@ namespace P2PNet
             set { _pendingBytes = value;  }
         }
 
-        public Buffer GetBufferForPending()
+        public BufferManager.Buffer GetBufferForPending()
         {
-            return new Buffer(new ArraySegment<byte>(
+            return new BufferManager.Buffer(new ArraySegment<byte>(
                 _buffer.Segment.Array,
                 _buffer.Segment.Offset + (_buffer.Segment.Count - _pendingBytes ),
                 _pendingBytes));
@@ -81,7 +80,7 @@ namespace P2PNet
             return data;
         }
 
-        internal static IOState Create(Buffer buffer, int bytes, Connection connection, BandwidthController bandwidthController, Action<Connection, byte[]> onSuccess, Action<Connection> onFailure)
+        internal static IOState Create(BufferManager.Buffer buffer, int bytes, Connection connection, BandwidthController bandwidthController, Action<Connection, byte[]> onSuccess, Action<Connection> onFailure)
         {
             var state = Pool.Count > 0 ? Pool.Dequeue() : new IOState();
 
@@ -111,7 +110,7 @@ namespace P2PNet
             }
         }
 
-        public Buffer Buffer
+        public BufferManager.Buffer Buffer
         {
             get { return _buffer; }
             set { _buffer = value; }

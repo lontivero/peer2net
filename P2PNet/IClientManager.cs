@@ -21,7 +21,7 @@
 
 // <summary></summary>
 
-namespace P2PNet
+namespace Peer2Net
 {
     public interface IClientManager
     {

@@ -23,7 +23,7 @@
 
 using NUnit.Framework;
 
-namespace P2PNet.Tests
+namespace Peer2Net.Tests
 {
     //[TestFixture]
     //public class PacketHandlerTest

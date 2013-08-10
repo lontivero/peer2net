@@ -23,7 +23,7 @@
 
 using System.Threading.Tasks;
 
-namespace P2PNet.Workers
+namespace Peer2Net.Workers
 {
     struct PauseToken
     {

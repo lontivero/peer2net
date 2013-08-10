@@ -22,9 +22,9 @@
 // <summary></summary>
 
 using System;
-using P2PNet.Progress;
+using Peer2Net.Progress;
 
-namespace P2PNet.BufferManager
+namespace Peer2Net.BufferManager
 {
     internal class BufferAllocator : IBufferAllocator
     {

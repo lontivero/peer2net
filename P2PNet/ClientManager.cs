@@ -22,9 +22,9 @@
 // <summary></summary>
 
 using System.Net;
-using P2PNet.Workers;
+using Peer2Net.Workers;
 
-namespace P2PNet
+namespace Peer2Net
 {
     public abstract class ClientManager
     {
