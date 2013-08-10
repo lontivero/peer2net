@@ -59,10 +59,7 @@ namespace P2PNet.Workers
         {
             get
             {
-                lock (_queueLock)
-                {
-                    return _queue.Count;
-                }
+                return _queue.Count;
             }
         }
     }

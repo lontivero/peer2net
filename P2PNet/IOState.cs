@@ -66,15 +66,12 @@ namespace P2PNet
             set { _pendingBytes = value;  }
         }
 
-        public Buffer Buffer
+        public Buffer GetBufferForPending()
         {
-            get
-            {
-                return new Buffer(new ArraySegment<byte>(
-                    _buffer.Segment.Array,
-                    _buffer.Segment.Offset + (_buffer.Segment.Count - _pendingBytes ),
-                    _pendingBytes));
-            }
+            return new Buffer(new ArraySegment<byte>(
+                _buffer.Segment.Array,
+                _buffer.Segment.Offset + (_buffer.Segment.Count - _pendingBytes ),
+                _pendingBytes));
         }
 
         public byte[] GetData()
@@ -84,12 +81,12 @@ namespace P2PNet
             return data;
         }
 
-        public static IOState Create(Buffer buffer, Connection connection, BandwidthController bandwidthController, Action<Connection, byte[]> onSuccess, Action<Connection> onFailure)
+        internal static IOState Create(Buffer buffer, int bytes, Connection connection, BandwidthController bandwidthController, Action<Connection, byte[]> onSuccess, Action<Connection> onFailure)
         {
             var state = Pool.Count > 0 ? Pool.Dequeue() : new IOState();
 
             state._buffer = buffer;
-            state._bytes = buffer.Size;
+            state._bytes = bytes;
             state._pendingBytes = state._bytes;
             state._connection = connection;
             state._bandwidthController = bandwidthController;
@@ -114,9 +111,15 @@ namespace P2PNet
             }
         }
 
-        public Buffer InternalBuffer
+        public Buffer Buffer
         {
             get { return _buffer; }
+            set { _buffer = value; }
+        }
+
+        public bool WaitingForBuffer
+        {
+            get { return _buffer == null; }
         }
 
         public void Release()

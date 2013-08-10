@@ -42,6 +42,7 @@ namespace P2PNet.BufferManager
         {
             var blocks = SizeToBlocks(size);
             var offset = _allocator.Allocate(blocks);
+            if(offset == -1) return null;
             PerformanceCounters.BufferMemoryUsed.IncrementBy(blocks*BlockSize);
             return new Buffer(new ArraySegment<byte>(_buffer, offset * BlockSize, size));
         }

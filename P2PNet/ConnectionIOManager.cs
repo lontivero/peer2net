@@ -54,15 +54,14 @@ namespace P2PNet
         public void EnqueueSend(byte[] data, Connection connection, BandwidthController bandwidthController,
                                 Action<Connection, byte[]> onSuccess, Action<Connection> onFailure)
         {
-            var buffer = _bufferAllocator.AllocateAndCopy(data);
-            Send(IOState.Create(buffer, connection, bandwidthController, onSuccess, onFailure));
+            var buffer = new BufferManager.Buffer(data);
+            Send(IOState.Create(buffer, buffer.Size, connection, bandwidthController, onSuccess, onFailure));
         }
 
         public void EnqueueReceive(int bytes, Connection connection, BandwidthController bandwidthController,
                                    Action<Connection, byte[]> onSuccess, Action<Connection> onFailure)
         {
-            var buffer = _bufferAllocator.Allocate(bytes);
-            Receive(IOState.Create(buffer, connection, bandwidthController, onSuccess, onFailure));
+            Receive(IOState.Create(null, bytes, connection, bandwidthController, onSuccess, onFailure));
         }
 
         private void ReceiveEnqueued()
@@ -111,8 +110,17 @@ namespace P2PNet
                 _sendQueue.Add(state);
                 return;
             }
+            if (state.WaitingForBuffer)
+            {
+                state.Buffer = _bufferAllocator.Allocate(state.Bytes);
+                if (state.WaitingForBuffer)
+                {
+                    _sendQueue.Add(state);
+                    return;
+                }
+            }
 
-            state.Connection.Send(state.Buffer, (sentCount, success) =>
+            state.Connection.Send(state.GetBufferForPending(), (sentCount, success) =>
                 {
                     try
                     {
@@ -137,7 +145,7 @@ namespace P2PNet
                     finally
                     {
                         state.Release();
-                        _bufferAllocator.Free(state.InternalBuffer);
+                        _bufferAllocator.Free(state.Buffer);
                     }
                 });
         }
@@ -149,8 +157,17 @@ namespace P2PNet
                 _receiveQueue.Add(state);
                 return;
             }
+            if (state.WaitingForBuffer)
+            {
+                state.Buffer = _bufferAllocator.Allocate(state.Bytes);
+                if(state.WaitingForBuffer)
+                {
+                    _receiveQueue.Add(state);
+                    return;
+                }
+            }
 
-            state.Connection.Receive(state.Buffer, (readCount, success) =>
+            state.Connection.Receive(state.GetBufferForPending(), (readCount, success) =>
                 {
                     try
                     {
@@ -175,7 +192,7 @@ namespace P2PNet
                     finally
                     {
                         state.Release();
-                        _bufferAllocator.Free(state.InternalBuffer);
+                        _bufferAllocator.Free(state.Buffer);
                     }
                 });
         }

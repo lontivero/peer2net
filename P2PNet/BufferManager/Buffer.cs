@@ -31,6 +31,12 @@ namespace P2PNet.BufferManager
         private readonly ArraySegment<byte> _segment;
         private readonly List<ArraySegment<byte>> _arrayOfSegments;
 
+        public Buffer(byte[] array)
+        {
+            _segment = new ArraySegment<byte>(array);
+            _arrayOfSegments = new List<ArraySegment<byte>> { _segment };
+        }
+
         public Buffer(ArraySegment<byte> segment)
         {
             _segment = segment;
