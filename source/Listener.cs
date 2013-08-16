@@ -41,7 +41,7 @@ namespace Peer2Net
         private readonly IPEndPoint _endpoint;
         private readonly Socket _listener;
 
-        internal event EventHandler<ConnectionEventArgs> ConnectionRequested;
+        internal event EventHandler<NewConnectionEventArgs> ConnectionRequested;
 
         public Listener(int port)
         {
@@ -69,6 +69,7 @@ namespace Peer2Net
         private void ListenForConnections()
         {
             var saea = ConnectSaeaPool.Take();
+            saea.AcceptSocket = null;
             saea.Completed += ConnectCompleted;
             var async = _listener.AcceptAsync(saea);
 
@@ -84,12 +85,12 @@ namespace Peer2Net
             {
                 if (saea.SocketError == SocketError.Success)
                 {
-                    RaiseConnectionRequestedEvent(new ConnectionEventArgs(saea.AcceptSocket));
+                    RaiseConnectionRequestedEvent(new NewConnectionEventArgs(saea.AcceptSocket));
                 }
             }
             finally
             {
-                saea.AcceptSocket = null;
+                saea.Completed -= ConnectCompleted;
                 ConnectSaeaPool.Add(saea);
                 ListenForConnections();
             }
@@ -103,7 +104,7 @@ namespace Peer2Net
             }
         }
 
-        private void RaiseConnectionRequestedEvent(ConnectionEventArgs args)
+        private void RaiseConnectionRequestedEvent(NewConnectionEventArgs args)
         {
             Events.RaiseAsync(ConnectionRequested, this, args);
         }

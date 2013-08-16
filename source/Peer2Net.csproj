@@ -43,10 +43,12 @@
     <Compile Include="CommunicationManager.cs" />
     <Compile Include="Connection.cs" />
     <Compile Include="ConnectState.cs" />
+    <Compile Include="EventArgs\NewConnectionEventArgs.cs" />
     <Compile Include="IClientManager.cs" />
     <Compile Include="Peer.cs" />
     <Compile Include="ConnectionIOManager.cs" />
     <Compile Include="ConnectionStat.cs" />
+    <Compile Include="EventArgs\PeerConnectedEventArgs.cs" />
     <Compile Include="Progress\IBandwidthController.cs" />
     <Compile Include="Progress\UnlimitedBandwidthController.cs" />
     <Compile Include="Progress\PerformanceCounters.cs" />
@@ -56,6 +58,7 @@
     <Compile Include="MessageHandlers\EotMessageHandler.cs" />
     <Compile Include="Utils\BlockingPool.cs" />
     <Compile Include="Utils\Guard.cs" />
+    <Compile Include="Utils\TimeExtensions.cs" />
     <Compile Include="Workers\BackgroundWorker.cs" />
     <Compile Include="Workers\BlockingQueue.cs" />
     <Compile Include="Workers\ClientWorker.cs" />
@@ -76,6 +79,9 @@
     <Compile Include="Listener.cs" />
     <Compile Include="Workers\ScheduledAction.cs" />
     <Compile Include="Workers\TimedWorker.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ClassDiagram1.cd" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

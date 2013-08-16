@@ -1,5 +1,5 @@
 ﻿//
-// - Settings.cs
+// - app.xaml.cs
 // 
 // Author:
 //     Lucas Ontivero <lucasontivero@gmail.com>
@@ -21,38 +21,14 @@
 
 // <summary></summary>
 
-using System;
+using System.Windows;
 
-namespace Peer2Net.ConsoleChat
+namespace Peer2Net.Chat
 {
-    class Settings
+    /// <summary>
+    /// Interaction logic for App.xaml
+    /// </summary>
+    public partial class App : Application
     {
-        private bool _tracing;
-        private int _port;
-        private string _seed;
-
-        public Settings()
-        {
-            _tracing = false;
-            _port = 1234 + (new Random().Next(100));
-        }
-
-        public bool Tracing
-        {
-            get { return _tracing; }
-            set { _tracing = value; }
-        }
-
-        public int Port
-        {
-            get { return _port; }
-            set { _port = value; }
-        }
-
-        public string Seed
-        {
-            get { return _seed; }
-            set { _seed = value; }
-        }
     }
 }

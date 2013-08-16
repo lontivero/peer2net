@@ -58,10 +58,6 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\P2PNet.Console\Peer2Net.ConsoleChat.csproj">
-      <Project>{83267F68-E46C-4AE4-B328-C0CD7496BB28}</Project>
-      <Name>Peer2Net.ConsoleChat</Name>
-    </ProjectReference>
     <ProjectReference Include="..\source\Peer2Net.csproj">
       <Project>{4F5330BB-6BE3-48A2-903D-A492BE05B2AB}</Project>
       <Name>Peer2Net</Name>

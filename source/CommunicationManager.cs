@@ -39,17 +39,22 @@ namespace Peer2Net
     public class CommunicationManager
     {
         private readonly Listener _listener;
-        private readonly ClientManager _clientManager;
         private readonly ClientWorker _worker;
         private readonly ConnectionIoActor _ioActor;
         private readonly ConcurrentDictionary<IPEndPoint, Peer> _peers;
         private readonly SpeedWatcher _globalReceiveSpeedWatcher;
         private readonly SpeedWatcher _globalSendSpeedWatcher;
 
-        public CommunicationManager(Listener listener, ClientManager clientManager)
+        public event EventHandler<PeerEventArgs> PeerConnected;
+        public event EventHandler<ConnectionEventArgs> ConnectionFailed;
+        public event EventHandler<ConnectionEventArgs> ConnectionClosed;
+        public event EventHandler<PeerDataEventArgs> PeerDataReceived;
+        public event EventHandler<PeerDataEventArgs> PeerDataSent;
+ 
+        
+        public CommunicationManager(Listener listener)
         {
             _listener = listener;
-            _clientManager = clientManager;
             _worker = new ClientWorker();
             _ioActor = new ConnectionIoActor(_worker);
             _peers = new ConcurrentDictionary<IPEndPoint, Peer>();
@@ -57,7 +62,7 @@ namespace Peer2Net
             _globalReceiveSpeedWatcher = new SpeedWatcher();
             _globalSendSpeedWatcher = new SpeedWatcher();
 
-            _worker.QueueForever(CalculateSpeed, TimeSpan.FromSeconds(0.5));
+            _worker.QueueForever(CalculateSpeed, 500.Milliseconds());
             _worker.Start();
 
             _listener.ConnectionRequested += NewPeerConnected;
@@ -78,7 +83,7 @@ namespace Peer2Net
             Guard.NotNull(endpoint, "endpoint");
             var connection = new Connection(endpoint);
 
-            _ioActor.EnqueueConnect(connection, OnConnected, OnConnectError);
+            _ioActor.Connect(connection, OnConnected, OnConnectError);
         }
 
         public void Receive(int bytes, IPEndPoint endpoint)
@@ -88,7 +93,7 @@ namespace Peer2Net
             Guard.ContainsKey(_peers, endpoint, "Peer is not registered.");
  
             var peer = _peers[endpoint];
-            _ioActor.EnqueueReceive(bytes, peer.Connection, peer.ReceiveBandwidthController, OnDataArrive, OnDataArriveError);
+            _ioActor.Receive(bytes, peer.Connection, peer.ReceiveBandwidthController, OnDataArrive, OnDataArriveError);
         }
 
         public void Send(byte[] message, IPEndPoint endpoint)
@@ -97,7 +102,7 @@ namespace Peer2Net
             Guard.NotNull(message, "message");
 
             var peer = _peers[endpoint];
-            _ioActor.EnqueueSend(message, peer.Connection, peer.SendBandwidthController, OnDataSent, OnDataSentError);
+            _ioActor.Send(message, peer.Connection, peer.SendBandwidthController, OnDataSent, OnDataSentError);
         }
 
         public void Send(byte[] message, IEnumerable<IPEndPoint> endpoints)
@@ -111,7 +116,7 @@ namespace Peer2Net
             }
         }
 
-        private void NewPeerConnected(object sender, ConnectionEventArgs args)
+        private void NewPeerConnected(object sender, NewConnectionEventArgs args)
         {
             var connection = new Connection(args.Socket);
 
@@ -125,7 +130,7 @@ namespace Peer2Net
             var peer = new Peer(connection);
             _peers.TryAdd(peer.Connection.Endpoint, peer);
 
-            _clientManager.OnPeerConnected(peer);
+            Events.RaiseAsync(PeerConnected, this, new PeerEventArgs(peer));
         }
 
         private void CalculateSpeed()
@@ -149,23 +154,22 @@ namespace Peer2Net
 
         private void OnConnectError(Connection connection)
         {
-            _clientManager.OnPeerConnectFailure(connection.Endpoint);
+            Events.RaiseAsync(ConnectionFailed, this, new ConnectionEventArgs(connection));
         }
 
         private void OnDataArrive(Connection connection, byte[] data)
         {
-            _worker.Queue(() =>
-                {
-                    var peer = _peers[connection.Endpoint];
-                    var butesReceived = data.Length;
+            _worker.Queue(() => {
+                var peer = _peers[connection.Endpoint];
+                var butesReceived = data.Length;
 
-                    GlobalReceiveSpeedWatcher.AddBytes(butesReceived);
+                GlobalReceiveSpeedWatcher.AddBytes(butesReceived);
 
-                    peer.Statistics.AddReceivedBytes(butesReceived);
-                    peer.ReceiveSpeedWatcher.AddBytes(butesReceived);
+                peer.Statistics.AddReceivedBytes(butesReceived);
+                peer.ReceiveSpeedWatcher.AddBytes(butesReceived);
 
-                    _clientManager.OnPeerDataReceived(peer, data);
-                });
+                Events.RaiseAsync(PeerDataReceived, this, new PeerDataEventArgs(peer, data));
+            });
         }
 
         private void OnDataArriveError(Connection connection)
@@ -175,8 +179,7 @@ namespace Peer2Net
 
         private void OnDataSent(Connection connection, byte[] data)
         {
-            _worker.Queue(() =>
-            {
+            _worker.Queue(() => {
                 var peer = _peers[connection.Endpoint];
                 var bytesSent = data.Length;
 
@@ -185,7 +188,7 @@ namespace Peer2Net
                 peer.Statistics.AddSentBytes(bytesSent);
                 peer.SendSpeedWatcher.AddBytes(bytesSent);
 
-                _clientManager.OnPeerDataSent(peer, data);
+                Events.RaiseAsync(PeerDataSent, this, new PeerDataEventArgs(peer, data));
             });
         }
 
@@ -199,7 +202,7 @@ namespace Peer2Net
             Peer peer;
             _peers.TryRemove(connection.Endpoint, out peer);
             connection.Close();
-            _clientManager.OnClosed(peer);
+            Events.RaiseAsync(ConnectionClosed, this, new ConnectionEventArgs(connection));
         }
     }
 }

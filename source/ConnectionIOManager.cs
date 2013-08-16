@@ -24,6 +24,7 @@
 using System;
 using Peer2Net.BufferManager;
 using Peer2Net.Progress;
+using Peer2Net.Utils;
 using Peer2Net.Workers;
 
 namespace Peer2Net
@@ -42,26 +43,26 @@ namespace Peer2Net
 
             _bufferAllocator = new BufferAllocator(new byte[1 << 16]);
             _worker = worker;
-            _worker.QueueForever(SendEnqueued, TimeSpan.FromMilliseconds(10));
-            _worker.QueueForever(ReceiveEnqueued, TimeSpan.FromMilliseconds(9));
+            _worker.QueueForever(SendEnqueued, 1.Milliseconds());
+            _worker.QueueForever(ReceiveEnqueued, 1.Milliseconds());
         }
 
-        public void EnqueueConnect(Connection connection, Action<Connection> onSuccess, Action<Connection> onFailure)
+        public void Connect(Connection connection, Action<Connection> onSuccess, Action<Connection> onFailure)
         {
-            Connect(ConnectState.Create(connection, onSuccess, onFailure));
+            ConnectInternal(ConnectState.Create(connection, onSuccess, onFailure));
         }
 
-        public void EnqueueSend(byte[] data, Connection connection, BandwidthController bandwidthController,
+        public void Send(byte[] data, Connection connection, BandwidthController bandwidthController,
                                 Action<Connection, byte[]> onSuccess, Action<Connection> onFailure)
         {
             var buffer = new BufferManager.Buffer(data);
-            Send(IOState.Create(buffer, buffer.Size, connection, bandwidthController, onSuccess, onFailure));
+            SendInternal(IOState.Create(buffer, buffer.Size, connection, bandwidthController, onSuccess, onFailure));
         }
 
-        public void EnqueueReceive(int bytes, Connection connection, BandwidthController bandwidthController,
+        public void Receive(int bytes, Connection connection, BandwidthController bandwidthController,
                                    Action<Connection, byte[]> onSuccess, Action<Connection> onFailure)
         {
-            Receive(IOState.Create(null, bytes, connection, bandwidthController, onSuccess, onFailure));
+            ReceiveInternal(IOState.Create(null, bytes, connection, bandwidthController, onSuccess, onFailure));
         }
 
         private void ReceiveEnqueued()
@@ -69,7 +70,7 @@ namespace Peer2Net
             var c = _receiveQueue.Count;
             for (var i = 0; i < c; i++)
             {
-                Receive(_receiveQueue.Take());
+                ReceiveInternal(_receiveQueue.Take());
             }
         }
 
@@ -77,11 +78,11 @@ namespace Peer2Net
             var d = _sendQueue.Count;
             for (var i = 0; i < d; i++)
             {
-                Send(_sendQueue.Take());
+                SendInternal(_sendQueue.Take());
             }
         }
 
-        private void Connect(ConnectState state)
+        private void ConnectInternal(ConnectState state)
         {
             _worker.QueueOneTime(() =>
             {
@@ -89,7 +90,7 @@ namespace Peer2Net
                 {
                     state.Connection.Close();
                 }
-            }, TimeSpan.FromSeconds(2));
+            }, 2.Seconds());
             state.Connection.Connect(success =>
             {
                 if (success)
@@ -103,7 +104,7 @@ namespace Peer2Net
             });
         }
 
-        private void Send(IOState state)
+        private void SendInternal(IOState state)
         {
             if (!state.BandwidthController.CanTransmit(state.PendingBytes))
             {
@@ -150,7 +151,7 @@ namespace Peer2Net
                 });
         }
 
-        private void Receive(IOState state)
+        private void ReceiveInternal(IOState state)
         {
             if (!state.BandwidthController.CanTransmit(state.PendingBytes))
             {

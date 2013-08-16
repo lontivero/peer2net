@@ -21,17 +21,20 @@
 
 // <summary></summary>
 
-using System.Net.Sockets;
-
 namespace Peer2Net.EventArgs
 {
-    internal class ConnectionEventArgs : System.EventArgs
+    public class ConnectionEventArgs : System.EventArgs
     {
-        public ConnectionEventArgs(Socket socket)
+        private readonly Connection _connection;
+
+        public ConnectionEventArgs(Connection connection)
         {
-            Socket = socket;
+            _connection = connection;
         }
 
-        internal Socket Socket { get; set; }
+        public Connection Connection
+        {
+            get { return _connection; }
+        }
     }
 }

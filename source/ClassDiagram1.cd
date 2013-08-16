@@ -1,0 +1,318 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="Peer2Net.BufferManager.BuddyBufferAllocator" Collapsed="true">
+    <Position X="3.25" Y="1.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>IAAAAAAEABAAAAAAAAABAAACAAAAAEAAAAAAAAAwAAI=</HashCode>
+      <FileName>BufferManager\BuddyBufferAllocator.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Peer2Net.BufferManager.Buffer" Collapsed="true">
+    <Position X="4.5" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAgAAAAAAAgAAAQAEAAAAAAAAAAAAAAAAAAAQAIAA=</HashCode>
+      <FileName>BufferManager\Buffer.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Peer2Net.BufferManager.BufferAllocator" BaseTypeListCollapsed="true">
+    <Position X="22" Y="7" Width="2" />
+    <Compartments>
+      <Compartment Name="Fields" Collapsed="true" />
+    </Compartments>
+    <TypeIdentifier>
+      <HashCode>AAAAAAAkAAABAAAAAAAAAAAAAAAAIAAAAAAACCAAAAI=</HashCode>
+      <FileName>BufferManager\BufferAllocator.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="Peer2Net.BufferManager.SpeedWatcher">
+    <Position X="18.5" Y="1.25" Width="1.5" />
+    <Compartments>
+      <Compartment Name="Fields" Collapsed="true" />
+    </Compartments>
+    <TypeIdentifier>
+      <HashCode>ABIAAAAgAAQAAAQAAAAAAAAQAAAAAAAARCAAAAAAAAA=</HashCode>
+      <FileName>BufferManager\SpeedWatcher.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Peer2Net.ClientManager">
+    <Position X="28.25" Y="1.25" Width="2.75" />
+    <TypeIdentifier>
+      <HashCode>gBAACAAAAAAAQAAAAAAAAAgAAQAIAAAgAAAAAACAgBA=</HashCode>
+      <FileName>ClientManager.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Field Name="_worker" />
+    </ShowAsAssociation>
+  </Class>
+  <Class Name="Peer2Net.CommunicationManager">
+    <Position X="24.75" Y="1.25" Width="2.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAIAAAQACBAAgAEAEQJBBUAAAAAIQAAAAQQBAhAg=</HashCode>
+      <FileName>CommunicationManager.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Field Name="_ioActor" />
+      <Field Name="_listener" />
+      <Field Name="_clientManager" />
+    </ShowAsAssociation>
+  </Class>
+  <Class Name="Peer2Net.Connection">
+    <Position X="15.75" Y="7.25" Width="2.25" />
+    <Compartments>
+      <Compartment Name="Fields" Collapsed="true" />
+    </Compartments>
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAARAAEAAAIAAAQAAAAAQAAAAQACBCIA=</HashCode>
+      <FileName>Connection.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Peer2Net.ConnectionIoActor">
+    <Position X="24.75" Y="7" Width="2.5" />
+    <TypeIdentifier>
+      <HashCode>AAICgAAAAQAAAAABIkAAAoAAAAAAAAAQAAAAAAAAgAA=</HashCode>
+      <FileName>ConnectionIOManager.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Field Name="_bufferAllocator" />
+    </ShowAsAssociation>
+  </Class>
+  <Class Name="Peer2Net.PeerStat">
+    <Position X="11.75" Y="4.75" Width="2.25" />
+    <Compartments>
+      <Compartment Name="Fields" Collapsed="true" />
+    </Compartments>
+    <TypeIdentifier>
+      <HashCode>AAAEAAICABAAIAAAAAAAAgAgAAAAAqAAQAAQAAAAAAA=</HashCode>
+      <FileName>ConnectionStat.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Peer2Net.ConnectState" Collapsed="true">
+    <Position X="4.25" Y="3.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAgAAAEAAAAAAAAAAAAAAEAAAAAAAQAJBAA=</HashCode>
+      <FileName>ConnectState.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Peer2Net.IOState" Collapsed="true">
+    <Position X="0.75" Y="2.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>EACAAAAgFAgAQQEAAAAAAAAAAAAACEAAQAAIARAJRAA=</HashCode>
+      <FileName>IOState.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Peer2Net.Listener">
+    <Position X="22" Y="1.25" Width="2" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAACACAAAAAAAAAAAAASAAAAAAICAABAABCAA=</HashCode>
+      <FileName>Listener.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Peer2Net.Peer">
+    <Position X="15.75" Y="4.75" Width="2.25" />
+    <Compartments>
+      <Compartment Name="Fields" Collapsed="true" />
+    </Compartments>
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAABEAQAEEBEAABBAAASAAAAAACBAAAAAABAA=</HashCode>
+      <FileName>Peer.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Property Name="Connection" />
+      <Property Name="ReceiveBandwidthController" />
+      <Property Name="ReceiveSpeedWatcher" />
+      <Property Name="SendBandwidthController" />
+      <Property Name="SendSpeedWatcher" />
+      <Property Name="Statistics" />
+    </ShowAsAssociation>
+  </Class>
+  <Class Name="Peer2Net.EventArgs.ConnectionEventArgs" Collapsed="true">
+    <Position X="6.75" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAA=</HashCode>
+      <FileName>EventArgs\ConnectionEventArgs.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Peer2Net.MessageHandlers.EotMessageHandler" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="6" Y="3.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAwAAIAAAAAAAAAAAAAAIAAAAAAAAAAAgAAgA=</HashCode>
+      <FileName>MessageHandlers\EotMessageHandler.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="Peer2Net.MessageHandlers.MessageReceivedEventArgs" Collapsed="true">
+    <Position X="4.25" Y="4.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAABAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAA=</HashCode>
+      <FileName>MessageHandlers\MessageReceivedEventArgs.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Peer2Net.MessageHandlers.PascalMessageHandler" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="6" Y="4.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AUAAAAAAwABIERAAAAEAIAEAAAIAAAAAQAAAAAkAAgA=</HashCode>
+      <FileName>MessageHandlers\PascalMessageHandler.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="Peer2Net.Progress.BandwidthController">
+    <Position X="15.75" Y="1.25" Width="2.25" />
+    <TypeIdentifier>
+      <HashCode>AAQAAAAAAAIAAAAEAAAAAAAAAAEABIAAAAAAAAAAAAA=</HashCode>
+      <FileName>Progress\BandwidthController.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Field Name="_pidController" />
+    </ShowAsAssociation>
+  </Class>
+  <Class Name="Peer2Net.Progress.PerformanceCounters" Collapsed="true">
+    <Position X="2.5" Y="5.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAQCCAAAACBQABQIAAKAAAAAAAAgAAAAAAAA=</HashCode>
+      <FileName>Progress\PerformanceCounters.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Peer2Net.Progress.PidController">
+    <Position X="11.75" Y="1.25" Width="2.25" />
+    <Compartments>
+      <Compartment Name="Fields" Collapsed="true" />
+    </Compartments>
+    <TypeIdentifier>
+      <HashCode>AAAAAAAEAAAAABAAAAAAAAAQAAAAAAAQAQAAAAAAAAA=</HashCode>
+      <FileName>Progress\PidController.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Peer2Net.Progress.UnlimitedBandwidthController" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="6.5" Y="6.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAQAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Progress\UnlimitedBandwidthController.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="Peer2Net.Utils.BlockingPool&lt;T&gt;" Collapsed="true">
+    <Position X="6" Y="1.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAIAAAAABAAAAAAAAAAAAAQAAAAAAAAAAAECAAAAAAA=</HashCode>
+      <FileName>Utils\BlockingPool.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Peer2Net.Utils.Events" Collapsed="true">
+    <Position X="7.75" Y="3.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAIAAABAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Utils\Events.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Peer2Net.Utils.Guard" Collapsed="true">
+    <Position X="7.75" Y="2.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAQAEAAAAAAAAAAAAAgAAEAAAAAAAABAAAAA=</HashCode>
+      <FileName>Utils\Guard.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Peer2Net.Workers.BackgroundWorker" BaseTypeListCollapsed="true">
+    <Position X="28.25" Y="7" Width="2.25" />
+    <TypeIdentifier>
+      <HashCode>AAAAAIAAACAAAAAAEAAAAAAAQAAAAAAAIAAAAAAAAAA=</HashCode>
+      <FileName>Workers\BackgroundWorker.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="Peer2Net.Workers.BlockingQueue&lt;T&gt;" Collapsed="true">
+    <Position X="7.75" Y="1.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAIAAAAAAAAAAAAAEEAAAAQAAAAAAAAAAAEAQAAAAAA=</HashCode>
+      <FileName>Workers\BlockingQueue.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Peer2Net.Workers.ClientWorker" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="6" Y="2.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAIAAARAACAAAAAAAAAAAAAAQAAAAAAAIAAAAAAAAIA=</HashCode>
+      <FileName>Workers\ClientWorker.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="Peer2Net.Workers.PauseTokenSource" Collapsed="true">
+    <Position X="7.75" Y="4.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAgAAAAAAAAAEAAAAAAAAAAAAAgAAAAAgAAABAIA=</HashCode>
+      <FileName>Workers\PauseTokenSource.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Peer2Net.Workers.ScheduledAction" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="6" Y="5.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAABAAAAAAAAAQAAIAAAAAAAAAACEAAAAIAABAAAAQ=</HashCode>
+      <FileName>Workers\ScheduledAction.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="Peer2Net.Workers.TimedWorker" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="7.75" Y="5.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAIAAIQAACAAAAAAAEAABAAAAAAABAAAIAAAABAAAAA=</HashCode>
+      <FileName>Workers\TimedWorker.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Struct Name="Peer2Net.Workers.PauseToken" Collapsed="true">
+    <Position X="2.5" Y="6.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAEAAAAAEAAAAAAAAAAAAAAAAAAAgAAAAAAA=</HashCode>
+      <FileName>Workers\PauseToken.cs</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Interface Name="Peer2Net.BufferManager.IBufferAllocator">
+    <Position X="4.75" Y="9" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAI=</HashCode>
+      <FileName>BufferManager\IBufferAllocator.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="Peer2Net.IClientManager" Collapsed="true">
+    <Position X="6" Y="7.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ABAACAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>IClientManager.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="Peer2Net.MessageHandlers.IProtocol" Collapsed="true">
+    <Position X="7.75" Y="7.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>MessageHandlers\IProtocol.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="Peer2Net.MessageHandlers.IStreamHandler" Collapsed="true">
+    <Position X="7.75" Y="8.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAQAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAgA=</HashCode>
+      <FileName>MessageHandlers\IStreamHandler.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="Peer2Net.Progress.IBandwidthController" Collapsed="true">
+    <Position X="2.5" Y="7.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAQAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Progress\IBandwidthController.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="Peer2Net.Workers.IWorker" Collapsed="true">
+    <Position X="7.25" Y="7" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAACAAAAAAAAAAAAAAQAAAAAAAIAAAAAAAAAA=</HashCode>
+      <FileName>Workers\IWorker.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="Peer2Net.Workers.IWorkScheduler" Collapsed="true">
+    <Position X="2.5" Y="8.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAIAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Workers\IWorker.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>

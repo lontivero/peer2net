@@ -36,11 +36,22 @@ namespace Peer2Net
             _worker.Start();
         }
 
-        public abstract void Connected(Peer peer);
-        public abstract void ConnectFailure(IPEndPoint endpoint);
-        public abstract void Closed(Peer peer);
-        public abstract void DataSent(Peer peer, byte[] data);
-        public abstract void DataReceived(Peer peer, byte[] data);
+        public virtual void Connected(Peer peer)
+        {
+        }
+
+        public virtual void ConnectFailure(IPEndPoint endpoint)
+        {
+        }
+        public virtual void Closed(Peer peer)
+        {
+        }
+        public virtual void DataSent(Peer peer, byte[] data)
+        {
+        }
+        public virtual void DataReceived(Peer peer, byte[] data)
+        {
+        }
 
         internal void OnPeerConnected(Peer peer)
         {

@@ -29,7 +29,7 @@ using Peer2Net.Utils;
 
 namespace Peer2Net
 {
-    internal class Connection
+    public class Connection
     {
         private static readonly BlockingPool<SocketAsyncEventArgs> SendRecvSaeaPool =
             new BlockingPool<SocketAsyncEventArgs>(() =>
