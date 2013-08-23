@@ -16,10 +16,9 @@ A simple Echo service that once received a message, sends it back.
 
 ```c#
 var listener = new Listener(9988);
-var comunicationManager = new CommunicationManager(_listener);
+var comManager = new CommunicationManager(_listener);
 
-comunicationManager.PeerDataReceived += (s, e)=>
-  comunicationManager.Send(e.Peer.EndPoint, e.Data);
+comManager.PeerDataReceived += (s, e)=>  comManager.Send(e.Peer.EndPoint, e.Data);
 
 listener.Start();
 ```
