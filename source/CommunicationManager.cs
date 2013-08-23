@@ -34,7 +34,8 @@ using Peer2Net.Workers;
 namespace Peer2Net
 {
     /// <summary>
-    /// 
+    /// CommunicationManager is one of the most important classes in the Peer2Net class library given it provides 
+    /// the main API functionalities, these are the four methods: Connect, Disconnect, Send and Receive.
     /// </summary>
     public class CommunicationManager
     {
@@ -50,13 +51,28 @@ namespace Peer2Net
         public event EventHandler<ConnectionEventArgs> ConnectionClosed;
         public event EventHandler<PeerDataEventArgs> PeerDataReceived;
         public event EventHandler<PeerDataEventArgs> PeerDataSent;
- 
-        
+
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="CommunicationManager"/> class.
+        /// </summary>
+        /// <example>
+        ///    var portNumber = 9876;
+        ///    var listener = new Listener(portNumber);
+        ///    var comunicationManager = new CommunicationManager(_listener);
+        ///    comunicationManager.PeerConnected += ChatOnMemberConnected;
+        ///    comunicationManager.ConnectionClosed += ChatOnMemberDisconnected;
+        ///    comunicationManager.ConnectionFailed += ChatOnMemberConnectionFailure;
+        ///    comunicationManager.PeerDataReceived += OnPeerDataReceived;
+        ///
+        ///    listener.Start();
+        /// </example>
+        /// <param name="listener">The incomming connections <see cref="Listener"/>.</param>
         public CommunicationManager(Listener listener)
         {
             _listener = listener;
             _worker = new ClientWorker();
-            _ioActor = new ConnectionIoActor(_worker);
+            _ioActor = new ConnectionIoActor(_worker, new BufferAllocator(new byte[1 << 16]));
             _peers = new ConcurrentDictionary<IPEndPoint, Peer>();
 
             _globalReceiveSpeedWatcher = new SpeedWatcher();
@@ -68,16 +84,36 @@ namespace Peer2Net
             _listener.ConnectionRequested += NewPeerConnected;
         }
 
+        /// <summary>
+        /// Gets the global receive speed watcher.
+        /// </summary>
+        /// <value>
+        /// The global receive speed watcher.
+        /// </value>
         public SpeedWatcher GlobalReceiveSpeedWatcher
         {
             get { return _globalReceiveSpeedWatcher; }
         }
 
+        /// <summary>
+        /// Gets the global send speed watcher.
+        /// </summary>
+        /// <value>
+        /// The global send speed watcher.
+        /// </value>
         public SpeedWatcher GlobalSendSpeedWatcher
         {
             get { return _globalSendSpeedWatcher; }
         }
 
+        /// <summary>
+        /// Connects to the specified endpoint.
+        /// </summary>
+        /// <remarks>
+        /// Connect is an async operation that raises the <see cref="PeerConnected"/> event when connection is successful;
+        /// <see cref="ConnectionFailed"/> is raised otherwise
+        /// </remarks>
+        /// <param name="endpoint">The ip endpoint.</param>
         public void Connect(IPEndPoint endpoint)
         {
             Guard.NotNull(endpoint, "endpoint");
@@ -86,6 +122,26 @@ namespace Peer2Net
             _ioActor.Connect(connection, OnConnected, OnConnectError);
         }
 
+        /// <summary>
+        /// Disconnects the specified endpoint.
+        /// </summary>
+        /// <param name="endpoint">The endpoint.</param>
+        public void Disconnect(IPEndPoint endpoint)
+        {
+            Guard.NotNull(endpoint, "endpoint");
+
+            var peer = _peers[endpoint];
+            CloseConnection(peer.Connection);
+        }
+
+        /// <summary>
+        /// Receive the amount of bytes from the specified ip endpoint.
+        /// </summary>
+        /// <remarks>
+        /// Receive is an async operation that raises the <see  cref="PeerDataReceived"/> event when data arrive.
+        /// </remarks>
+        /// <param name="bytes">The bytes count</param>
+        /// <param name="endpoint">The ip endpoint.</param>
         public void Receive(int bytes, IPEndPoint endpoint)
         {
             Guard.IsGreaterOrEqualTo(bytes, 0, "bytes");
@@ -96,6 +152,14 @@ namespace Peer2Net
             _ioActor.Receive(bytes, peer.Connection, peer.ReceiveBandwidthController, OnDataArrive, OnDataArriveError);
         }
 
+        /// <summary>
+        /// Send the message to the specified ip endpoint.
+        /// </summary>
+        /// <remarks>
+        /// Send is an async operation that raises the <see  cref="PeerDataSent"/> event after message is sent.
+        /// </remarks>
+        /// <param name="message">The message.</param>
+        /// <param name="endpoint">The ip endpoint.</param>
         public void Send(byte[] message, IPEndPoint endpoint)
         {
             Guard.NotNull(endpoint, "endpoint");
@@ -125,7 +189,7 @@ namespace Peer2Net
             RegisterPeer(connection);
         }
 
-        private void RegisterPeer(Connection connection)
+        private void RegisterPeer(IConnection connection)
         {
             var peer = new Peer(connection);
             _peers.TryAdd(peer.Connection.Endpoint, peer);
@@ -147,17 +211,17 @@ namespace Peer2Net
             }
         }
 
-        private void OnConnected(Connection connection)
+        private void OnConnected(IConnection connection)
         {
             RegisterPeer(connection);
         }
 
-        private void OnConnectError(Connection connection)
+        private void OnConnectError(IConnection connection)
         {
-            Events.RaiseAsync(ConnectionFailed, this, new ConnectionEventArgs(connection));
+            Events.RaiseAsync(ConnectionFailed, this, new ConnectionEventArgs(connection.Endpoint));
         }
 
-        private void OnDataArrive(Connection connection, byte[] data)
+        private void OnDataArrive(IConnection connection, byte[] data)
         {
             _worker.Queue(() => {
                 var peer = _peers[connection.Endpoint];
@@ -172,12 +236,12 @@ namespace Peer2Net
             });
         }
 
-        private void OnDataArriveError(Connection connection)
+        private void OnDataArriveError(IConnection connection)
         {
             CloseConnection(connection);
         }
 
-        private void OnDataSent(Connection connection, byte[] data)
+        private void OnDataSent(IConnection connection, byte[] data)
         {
             _worker.Queue(() => {
                 var peer = _peers[connection.Endpoint];
@@ -192,17 +256,17 @@ namespace Peer2Net
             });
         }
 
-        private void OnDataSentError(Connection connection)
+        private void OnDataSentError(IConnection connection)
         {
             CloseConnection(connection);
         }
 
-        private void CloseConnection(Connection connection)
+        private void CloseConnection(IConnection connection)
         {
             Peer peer;
             _peers.TryRemove(connection.Endpoint, out peer);
             connection.Close();
-            Events.RaiseAsync(ConnectionClosed, this, new ConnectionEventArgs(connection));
+            Events.RaiseAsync(ConnectionClosed, this, new ConnectionEventArgs(connection.Endpoint));
         }
     }
 }

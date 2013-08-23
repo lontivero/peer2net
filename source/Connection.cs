@@ -29,7 +29,7 @@ using Peer2Net.Utils;
 
 namespace Peer2Net
 {
-    public class Connection
+    internal class Connection : IConnection
     {
         private static readonly BlockingPool<SocketAsyncEventArgs> SendRecvSaeaPool =
             new BlockingPool<SocketAsyncEventArgs>(() =>
@@ -48,7 +48,8 @@ namespace Peer2Net
 
         private readonly Socket _socket;
         private readonly IPEndPoint _endpoint;
- 
+        private bool _socketDisposed;
+
         public IPEndPoint Endpoint
         {
             get { return _endpoint; }
@@ -61,26 +62,26 @@ namespace Peer2Net
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Reliability", "CA2000:Dispose objects before losing scope", 
             Justification = "The framework manages the socket lifetime")]
-        public Connection(IPEndPoint endpoint)
+        internal Connection(IPEndPoint endpoint)
             : this(new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp), endpoint)
         {}
 
-        public Connection(Socket socket)
+        internal Connection(Socket socket)
             : this(socket, (IPEndPoint)socket.RemoteEndPoint)
         {}
 
-        public Connection(Socket socket, IPEndPoint endpoint)
+        internal Connection(Socket socket, IPEndPoint endpoint)
         {
             _socket = socket;
             _endpoint = endpoint;
+            _socketDisposed = false;
         }
-
 
         private static void SendRecvCompleted(object sender, SocketAsyncEventArgs socketAsyncEventArgs)
         {
             try
             {
-                var callback = (Action<int, bool>) socketAsyncEventArgs.UserToken;
+                var callback = (ConnectionIoCallback)socketAsyncEventArgs.UserToken;
 
                 if (socketAsyncEventArgs.SocketError != SocketError.Success ||
                     socketAsyncEventArgs.BytesTransferred == 0)
@@ -101,7 +102,7 @@ namespace Peer2Net
         {
             try
             {
-                var callback = (Action<bool>)socketAsyncEventArgs.UserToken;
+                var callback = (ConnectionConnectCallback)socketAsyncEventArgs.UserToken;
                 var success = socketAsyncEventArgs.SocketError == SocketError.Success;
                 callback(success);
             }
@@ -111,8 +112,10 @@ namespace Peer2Net
             }
         }
 
-        internal void Receive(BufferManager.Buffer buffer, Action<int, bool> callback)
+        public void Receive(BufferManager.Buffer buffer, ConnectionIoCallback callback)
         {
+            if(CheckDisconnectedOrDisposed(callback)) return;
+
             var recvAsyncEventArgs = SendRecvSaeaPool.Take();
             recvAsyncEventArgs.UserToken = callback;
             recvAsyncEventArgs.BufferList = buffer.ToArraySegmentList();
@@ -124,8 +127,10 @@ namespace Peer2Net
             }
         }
 
-        internal void Send(BufferManager.Buffer buffer, Action<int, bool> callback)
+        public void Send(BufferManager.Buffer buffer, ConnectionIoCallback callback)
         {
+            if (CheckDisconnectedOrDisposed(callback)) return;
+
             var sendAsyncEventArgs = SendRecvSaeaPool.Take();
             sendAsyncEventArgs.UserToken = callback;
             sendAsyncEventArgs.BufferList = buffer.ToArraySegmentList();
@@ -137,8 +142,10 @@ namespace Peer2Net
             }
         }
 
-        internal void Connect(Action<bool> callback)
+        public void Connect(ConnectionConnectCallback callback)
         {
+            if (_socketDisposed){ callback(false); return;}
+
             var connectAsyncEventArgs = ConnectSaeaPool.Take();
             connectAsyncEventArgs.UserToken = callback;
             connectAsyncEventArgs.RemoteEndPoint = Endpoint;
@@ -150,9 +157,17 @@ namespace Peer2Net
             }
         }
 
-        internal void Close()
+        public void Close()
         {
             _socket.Close();
+            _socketDisposed = true;
+        }
+
+        private bool CheckDisconnectedOrDisposed(ConnectionIoCallback callback)
+        {
+            var disconnected = !IsConnected;
+            if (disconnected || _socketDisposed) callback(0, false);
+            return disconnected;
         }
     }
 }

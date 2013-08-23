@@ -29,24 +29,24 @@ namespace Peer2Net.Progress
     public class BandwidthController
     {
         private readonly PidController _pidController;
-        private int _targeSpeed;
+        private int _setpoint;
         private int _accumulatedBytes;
 
         internal BandwidthController()
         {
             _pidController = new PidController();
-            _targeSpeed = Int32.MaxValue;
+            _setpoint = Int32.MaxValue;
             _accumulatedBytes = Int32.MaxValue;
         }
 
         public int TargetSpeed
         {
-            get { return _targeSpeed; }
+            get { return _setpoint; }
             set
             {
                 Guard.IsBeetwen(value, 0, int.MaxValue, "value");
-                _targeSpeed = value;
-                _accumulatedBytes = _targeSpeed;
+                _setpoint = value;
+                _accumulatedBytes = _setpoint;
             }
         }
 
@@ -61,11 +61,11 @@ namespace Peer2Net.Progress
         internal void Update(double measuredSpeed, TimeSpan deltaTime)
         {
             var seconds = deltaTime.TotalMilliseconds / 1000.0;
-            var deltaSpeed = _targeSpeed - measuredSpeed;
+            var deltaSpeed = _setpoint - measuredSpeed;
 
             var correction = _pidController.Control(deltaSpeed, seconds);
-            _accumulatedBytes += (int)(correction);
-            _accumulatedBytes = _accumulatedBytes > 0 ? _accumulatedBytes : Int32.MaxValue;
+            _accumulatedBytes += (int)(/*measuredSpeed +*/ correction);
+//            _accumulatedBytes = _accumulatedBytes > 0 ? _accumulatedBytes : Int32.MaxValue;
         }
     }
 }

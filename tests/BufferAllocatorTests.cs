@@ -81,5 +81,16 @@ namespace Peer2Net.Tests
             Assert.AreEqual(64, buffer.Segment.Offset);
             Assert.AreEqual(32, buffer.Segment.Count);
         }
+
+        [Test]
+        public void Test5()
+        {
+            var memeory = new byte[256];
+            var bufferManager = new BufferAllocator(memeory);
+
+            bufferManager.Allocate(256);
+            Assert.IsNull(bufferManager.Allocate(1));
+        }
+
     }
 }

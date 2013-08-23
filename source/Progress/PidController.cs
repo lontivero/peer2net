@@ -55,7 +55,9 @@ namespace Peer2Net.Progress
         {
             lock(_syncObject)
             {
-                _integral = _integral + (error * dt);
+                var pintegral = _integral + (error*dt);
+                _integral = pintegral < -30 ? -30 : pintegral;
+                _integral = pintegral >  30 ?  30 : pintegral;
                 var derivative = (error - _prevError) / dt;
                 var pid = _kp * error + _ki * _integral + _kd * derivative;
                 _prevError = error;

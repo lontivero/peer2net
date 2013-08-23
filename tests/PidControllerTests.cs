@@ -22,6 +22,7 @@
 // <summary></summary>
 
 using System;
+using System.Diagnostics;
 using NUnit.Framework;
 using Peer2Net.Progress;
 
@@ -30,7 +31,7 @@ namespace Peer2Net.Tests
     [TestFixture]
     public class PidControllerTests
     {
-        [Test, Repeat(10)]
+        [Test]
         public void StopWhenPositiveError()
         {
             var rand = new Random();
@@ -41,6 +42,7 @@ namespace Peer2Net.Tests
             for(int i = 0; i < 35 ; i++)
             {
                 var error = desired - measured;
+                Debug.WriteLine("{0} e: {1}",i, error);
                 var output = controller.Control(error, 1);
 
                 desired += 10;
@@ -48,6 +50,20 @@ namespace Peer2Net.Tests
             }
 
             Assert.IsTrue(Math.Abs(desired - measured) <= 1e-5);
+        }
+
+        [Test]
+        public void Test1()
+        {
+            var rand = new Random();
+            
+            var controller = new PidController(0.6, 0.4);
+            controller.Control(10, 1);
+            controller.Control(2, 1);
+            controller.Control(0.5, 1);
+            controller.Control(0.05, 1);
+            controller.Control(0.005, 1);
+
         }
     }
 }

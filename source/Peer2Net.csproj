@@ -45,6 +45,7 @@
     <Compile Include="ConnectState.cs" />
     <Compile Include="EventArgs\NewConnectionEventArgs.cs" />
     <Compile Include="IClientManager.cs" />
+    <Compile Include="IConnection.cs" />
     <Compile Include="Peer.cs" />
     <Compile Include="ConnectionIOManager.cs" />
     <Compile Include="ConnectionStat.cs" />

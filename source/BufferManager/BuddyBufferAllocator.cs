@@ -54,7 +54,7 @@ namespace Peer2Net.BufferManager
             for(; value > 0; value >>= 1, exp++)
             {
             }
-            return exp;
+            return exp-1;
         }
 
         public static BuddyBufferAllocator Create(int size)
@@ -63,9 +63,9 @@ namespace Peer2Net.BufferManager
             return new BuddyBufferAllocator(levels);
         }
 
-        public int Allocate(int size)
+        internal int Allocate(int size)
         {
-            var level = size <= 1 ? 0 : Log2(size - 1) + 1;
+            var level = Log2(size);
 
             var index = 0;
             if (_longest[index] < level)

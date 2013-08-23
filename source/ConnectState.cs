@@ -27,11 +27,11 @@ namespace Peer2Net
 {
     internal class ConnectState
     {
-        private readonly Action<Connection> _onSuccess;
-        private readonly Action<Connection> _onFailure;
-        private readonly Connection _connection;
+        private readonly FailureCallback _onSuccess;
+        private readonly FailureCallback _onFailure;
+        private readonly IConnection _connection;
 
-        private ConnectState(Connection connection, Action<Connection> onSuccess, Action<Connection> onFailure)
+        private ConnectState(IConnection connection, FailureCallback onSuccess, FailureCallback onFailure)
         {
             _connection = connection;
             _onSuccess = onSuccess;
@@ -48,12 +48,12 @@ namespace Peer2Net
             get { return () => _onFailure(_connection); }
         }
 
-        public Connection Connection
+        public IConnection Connection
         {
             get { return _connection; }
         }
 
-        public static ConnectState Create(Connection connection, Action<Connection> onSuccess, Action<Connection> onFailure)
+        public static ConnectState Create(IConnection connection, FailureCallback onSuccess, FailureCallback onFailure)
         {
             return new ConnectState(connection, onSuccess, onFailure);
         }

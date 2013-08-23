@@ -22,7 +22,10 @@
 // <summary></summary>
 
 using System;
+using System.Collections;
 using System.Diagnostics;
+using System.Linq;
+using System.Threading;
 using NUnit.Framework;
 using Peer2Net.BufferManager;
 using Peer2Net.Progress;
@@ -32,6 +35,36 @@ namespace Peer2Net.Tests
     [TestFixture]
     public class BandwidthControllerTests
     {
+        [Test]
+        public void ControlBeforeUpdateXXX()
+        {
+            var list = new Queue(Enumerable.Range(0, 9999).ToArray());
+            var controller = new BandwidthController { TargetSpeed = 500 };
+            var processed = 0;
+            var timer = new System.Timers.Timer();
+            timer.Elapsed += (sender, args) =>
+                {
+                    controller.Update(processed, TimeSpan.FromMilliseconds(250));
+                    processed = 0;
+                };
+            timer.Interval = 250;
+            timer.Start();
+            while(list.Count > 0)
+            {
+                if(controller.CanTransmit(1))
+                {
+                    list.Dequeue();
+                    processed++;
+                }
+                else
+                {
+                    Thread.Sleep(10);
+                }
+            }
+            timer.Stop();
+        }
+
+
         [Test]
         public void ControlBeforeUpdate()
         {

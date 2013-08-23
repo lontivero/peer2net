@@ -66,12 +66,12 @@ namespace Peer2Net.Chat
 
         private void ChatOnMemberConnectionFailure(object sender, ConnectionEventArgs e)
         {
-            Display(e.Connection.Endpoint + " not found");
+            Display(e.EndPoint + " not found");
         }
 
         private void ChatOnMemberDisconnected(object sender, ConnectionEventArgs e)
         {
-            Display(e.Connection.Endpoint + " left the room");
+            Display(e.EndPoint + " left the room");
         }
 
         private void ChatOnMemberConnected(object sender, PeerEventArgs e)
@@ -82,7 +82,7 @@ namespace Peer2Net.Chat
             _sessions.Add(e.Peer.EndPoint, new Tuple<Peer, PascalMessageHandler>(e.Peer, messageHandler));
             _comunicationManager.Receive(4, e.Peer.EndPoint);
 
-            Display(e.Peer.EndPoint + " has joint to the room");
+            Display(e.Peer.EndPoint + " has joined");
         }
 
         private void NotifyMessageReceived(Peer peer, MessageReceivedEventArgs e)
@@ -108,6 +108,8 @@ namespace Peer2Net.Chat
                 }
                 else
                 {
+                    Display("Me:");
+                    Display("  " + text);
                     SendMessage(text);
                 }
                 textBoxEntryField.Clear();

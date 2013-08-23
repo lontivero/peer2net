@@ -31,12 +31,12 @@ namespace Peer2Net
     {
         private static readonly Queue<IOState> Pool = new Queue<IOState>();
 
-        private Connection _connection;
+        private IConnection _connection;
         private BandwidthController _bandwidthController;
         private int _bytes;
         private BufferManager.Buffer _buffer;
-        private Action<Connection, byte[]> _onSuccess;
-        private Action<Connection> _onFailure;
+        private SuccessCallback _onSuccess;
+        private FailureCallback _onFailure;
         private int _pendingBytes;
 
 
@@ -44,7 +44,7 @@ namespace Peer2Net
         {
         }
 
-        public Connection Connection
+        public IConnection Connection
         {
             get { return _connection; }
         }
@@ -80,7 +80,7 @@ namespace Peer2Net
             return data;
         }
 
-        internal static IOState Create(BufferManager.Buffer buffer, int bytes, Connection connection, BandwidthController bandwidthController, Action<Connection, byte[]> onSuccess, Action<Connection> onFailure)
+        internal static IOState Create(BufferManager.Buffer buffer, int bytes, IConnection connection, BandwidthController bandwidthController, SuccessCallback onSuccess, FailureCallback onFailure)
         {
             var state = Pool.Count > 0 ? Pool.Dequeue() : new IOState();
 

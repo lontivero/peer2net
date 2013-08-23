@@ -29,6 +29,12 @@ using Peer2Net.Utils;
 
 namespace Peer2Net
 {
+    public enum ListenerStatus
+    {
+        Listening,
+        Stopped
+    }
+
     public class Listener
     {
         private static readonly BlockingPool<SocketAsyncEventArgs> ConnectSaeaPool =
@@ -39,23 +45,43 @@ namespace Peer2Net
             });
 
         private readonly IPEndPoint _endpoint;
-        private readonly Socket _listener;
+        private Socket _listener;
+        private int _port;
+        private ListenerStatus _status;
 
         internal event EventHandler<NewConnectionEventArgs> ConnectionRequested;
 
         public Listener(int port)
         {
+            _port = port;
             _endpoint = new IPEndPoint(IPAddress.Any, port);
-            _listener = new Socket(_endpoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+            _status = ListenerStatus.Stopped;
+        }
+
+        public ListenerStatus Status
+        {
+            get { return _status; }
+        }
+
+        public EndPoint Endpoint
+        {
+            get { return _endpoint; }
+        }
+
+        public int Port
+        {
+            get { return _port; }
         }
 
         public void Start()
         {
             try
             {
+                _listener = new Socket(_endpoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
                 _listener.SetIPProtectionLevel(IPProtectionLevel.Unrestricted);
                 _listener.Bind(_endpoint);
                 _listener.Listen(4);
+                _status = ListenerStatus.Listening;
 
                 ListenForConnections();
             }
@@ -63,6 +89,7 @@ namespace Peer2Net
             {
                 if (_listener == null) return;
                 Stop();
+                throw;
             }
         }
 
@@ -71,6 +98,8 @@ namespace Peer2Net
             var saea = ConnectSaeaPool.Take();
             saea.AcceptSocket = null;
             saea.Completed += ConnectCompleted;
+            if(_status == ListenerStatus.Stopped) return;
+
             var async = _listener.AcceptAsync(saea);
 
             if (!async)
@@ -92,15 +121,17 @@ namespace Peer2Net
             {
                 saea.Completed -= ConnectCompleted;
                 ConnectSaeaPool.Add(saea);
-                ListenForConnections();
+                if(_listener!=null) ListenForConnections();
             }
         }
 
         public void Stop()
         {
+            _status = ListenerStatus.Stopped;
             if (_listener != null)
             {
                 _listener.Close();
+                _listener = null;
             }
         }
 

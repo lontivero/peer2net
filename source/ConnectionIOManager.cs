@@ -21,7 +21,6 @@
 
 // <summary></summary>
 
-using System;
 using Peer2Net.BufferManager;
 using Peer2Net.Progress;
 using Peer2Net.Utils;
@@ -29,38 +28,42 @@ using Peer2Net.Workers;
 
 namespace Peer2Net
 {
+    internal delegate void ConnectCallback(IConnection connection);
+    internal delegate void FailureCallback(IConnection connection);
+    internal delegate void SuccessCallback(IConnection connection, byte[] data);
+
     internal class ConnectionIoActor
     {
         private readonly IWorkScheduler _worker;
         private readonly BlockingQueue<IOState> _sendQueue;
         private readonly BlockingQueue<IOState> _receiveQueue;
-        private readonly BufferAllocator _bufferAllocator;
+        private readonly IBufferAllocator _bufferAllocator;
 
-        public ConnectionIoActor(IWorkScheduler worker)
+        public ConnectionIoActor(IWorkScheduler worker, IBufferAllocator bufferAllocator)
         {
             _sendQueue = new BlockingQueue<IOState>();
             _receiveQueue = new BlockingQueue<IOState>();
 
-            _bufferAllocator = new BufferAllocator(new byte[1 << 16]);
+            _bufferAllocator = bufferAllocator;
             _worker = worker;
             _worker.QueueForever(SendEnqueued, 1.Milliseconds());
             _worker.QueueForever(ReceiveEnqueued, 1.Milliseconds());
         }
 
-        public void Connect(Connection connection, Action<Connection> onSuccess, Action<Connection> onFailure)
+        public void Connect(IConnection connection, FailureCallback onSuccess, FailureCallback onFailure)
         {
             ConnectInternal(ConnectState.Create(connection, onSuccess, onFailure));
         }
 
-        public void Send(byte[] data, Connection connection, BandwidthController bandwidthController,
-                                Action<Connection, byte[]> onSuccess, Action<Connection> onFailure)
+        public void Send(byte[] data, IConnection connection, BandwidthController bandwidthController,
+                                SuccessCallback onSuccess, FailureCallback onFailure)
         {
-            var buffer = new BufferManager.Buffer(data);
+            var buffer = new Buffer(data);
             SendInternal(IOState.Create(buffer, buffer.Size, connection, bandwidthController, onSuccess, onFailure));
         }
 
-        public void Receive(int bytes, Connection connection, BandwidthController bandwidthController,
-                                   Action<Connection, byte[]> onSuccess, Action<Connection> onFailure)
+        public void Receive(int bytes, IConnection connection, BandwidthController bandwidthController,
+                                   SuccessCallback onSuccess, FailureCallback onFailure)
         {
             ReceiveInternal(IOState.Create(null, bytes, connection, bandwidthController, onSuccess, onFailure));
         }

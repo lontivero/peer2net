@@ -30,7 +30,7 @@ namespace Peer2Net
 {
     public class Peer
     {
-        private readonly Connection _connection;
+        private readonly IConnection _connection;
         private readonly PeerStat _statistics;
         private readonly BandwidthController _receiveBandwidthController;
         private readonly BandwidthController _sendBandwidthController;
@@ -38,7 +38,7 @@ namespace Peer2Net
         private readonly SpeedWatcher _receiveSpeedWatcher;
         private readonly Uri _uri;
 
-        internal Connection Connection
+        internal IConnection Connection
         {
             get { return _connection; }
         }
@@ -78,7 +78,7 @@ namespace Peer2Net
             get { return _receiveSpeedWatcher; }
         }
 
-        internal Peer(Connection connection)
+        internal Peer(IConnection connection)
         {
             _connection = connection;
             _sendSpeedWatcher = new SpeedWatcher();

@@ -21,20 +21,22 @@
 
 // <summary></summary>
 
+using System.Net;
+
 namespace Peer2Net.EventArgs
 {
     public class ConnectionEventArgs : System.EventArgs
     {
-        private readonly Connection _connection;
+        private readonly IPEndPoint _endpoint;
 
-        public ConnectionEventArgs(Connection connection)
+        internal ConnectionEventArgs(IPEndPoint endpoint)
         {
-            _connection = connection;
+            _endpoint = endpoint;
         }
 
-        public Connection Connection
+        public IPEndPoint EndPoint
         {
-            get { return _connection; }
+            get { return _endpoint; }
         }
     }
 }
