@@ -55,14 +55,14 @@ namespace Peer2Net
             ConnectInternal(ConnectState.Create(connection, onSuccess, onFailure));
         }
 
-        public void Send(byte[] data, IConnection connection, BandwidthController bandwidthController,
+        public void Send(byte[] data, IConnection connection, IBandwidthController bandwidthController,
                                 SuccessCallback onSuccess, FailureCallback onFailure)
         {
             var buffer = new Buffer(data);
             SendInternal(IOState.Create(buffer, buffer.Size, connection, bandwidthController, onSuccess, onFailure));
         }
 
-        public void Receive(int bytes, IConnection connection, BandwidthController bandwidthController,
+        public void Receive(int bytes, IConnection connection, IBandwidthController bandwidthController,
                                    SuccessCallback onSuccess, FailureCallback onFailure)
         {
             ReceiveInternal(IOState.Create(null, bytes, connection, bandwidthController, onSuccess, onFailure));

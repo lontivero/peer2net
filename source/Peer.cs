@@ -32,8 +32,8 @@ namespace Peer2Net
     {
         private readonly IConnection _connection;
         private readonly PeerStat _statistics;
-        private readonly BandwidthController _receiveBandwidthController;
-        private readonly BandwidthController _sendBandwidthController;
+        private readonly IBandwidthController _receiveBandwidthController;
+        private readonly IBandwidthController _sendBandwidthController;
         private readonly SpeedWatcher _sendSpeedWatcher;
         private readonly SpeedWatcher _receiveSpeedWatcher;
         private readonly Uri _uri;
@@ -58,12 +58,12 @@ namespace Peer2Net
             get { return _statistics; }
         }
 
-        public BandwidthController ReceiveBandwidthController
+        internal IBandwidthController ReceiveBandwidthController
         {
             get { return _receiveBandwidthController; }
         }
 
-        public BandwidthController SendBandwidthController
+        internal IBandwidthController SendBandwidthController
         {
             get { return _sendBandwidthController; }
         }
@@ -83,8 +83,8 @@ namespace Peer2Net
             _connection = connection;
             _sendSpeedWatcher = new SpeedWatcher();
             _receiveSpeedWatcher = new SpeedWatcher();
-            _receiveBandwidthController = new BandwidthController();
-            _sendBandwidthController = new BandwidthController();
+            _receiveBandwidthController = new UnlimitedBandwidthController();
+            _sendBandwidthController = new UnlimitedBandwidthController();
             _statistics = new PeerStat();
             _uri = new Uri("tcp://" + EndPoint.Address + ':' + EndPoint.Port);
         }

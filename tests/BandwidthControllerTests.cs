@@ -35,35 +35,6 @@ namespace Peer2Net.Tests
     [TestFixture]
     public class BandwidthControllerTests
     {
-        [Test]
-        public void ControlBeforeUpdateXXX()
-        {
-            var list = new Queue(Enumerable.Range(0, 9999).ToArray());
-            var controller = new BandwidthController { TargetSpeed = 500 };
-            var processed = 0;
-            var timer = new System.Timers.Timer();
-            timer.Elapsed += (sender, args) =>
-                {
-                    controller.Update(processed, TimeSpan.FromMilliseconds(250));
-                    processed = 0;
-                };
-            timer.Interval = 250;
-            timer.Start();
-            while(list.Count > 0)
-            {
-                if(controller.CanTransmit(1))
-                {
-                    list.Dequeue();
-                    processed++;
-                }
-                else
-                {
-                    Thread.Sleep(10);
-                }
-            }
-            timer.Stop();
-        }
-
 
         [Test]
         public void ControlBeforeUpdate()
@@ -88,8 +59,7 @@ namespace Peer2Net.Tests
         {
             var controller = new BandwidthController { TargetSpeed = 1024 };
             controller.Update(measuredSpeed: 1024, deltaTime: TimeSpan.FromSeconds(1));
-            Assert.IsFalse(controller.CanTransmit(1025), "Controller should NOT allow transmit more than 2048 bytes");
-            Assert.IsTrue(controller.CanTransmit(1024), "Controller should allow transmit 2048");
+            Assert.IsTrue(controller.CanTransmit(2048), "Controller should allow transmit 2048");
         }
 
         [Test]
@@ -123,65 +93,39 @@ namespace Peer2Net.Tests
         [Test]
         public void ShouldTakeAbout10Seconds()
         {
-            var controller = new BandwidthController { TargetSpeed = 1000 }; // 1 Kb/s
-            var speedWatcher = new SpeedWatcher();
-            var obj = new object();
-            var rand = new Random();
-            var timer = new System.Timers.Timer(500); // Calculate speed once per second
-            int acc = 0;
-            timer.Elapsed += (o, e)=>{
-                lock(obj)
+            var list = new Queue(Enumerable.Range(0, 9999).ToArray());
+            var controller = new BandwidthController { TargetSpeed = 1000 };
+            var processed = 0;
+            var timer = new System.Timers.Timer();
+            timer.Elapsed += (sender, args) =>
+            {
+                lock (controller)
                 {
-                    speedWatcher.CalculateAndReset();
-                    controller.Update(speedWatcher.BytesPerSecond, speedWatcher.MeasuredDeltaTime);
-                    //Debug.WriteLine( "  -sent: " + acc);
-                    //acc = 0;
+                    controller.Update(processed, TimeSpan.FromMilliseconds(250));
+                    processed = 0;
                 }
             };
-
-            var stopWatch = new System.Diagnostics.Stopwatch();
-            stopWatch.Start();
+            timer.Interval = 250;
+            var sw = new Stopwatch();
             timer.Start();
-
-            int bytesToTransmit = 20*1000; // we want to transmit 10 KB
-            while (bytesToTransmit > 0)
+            sw.Start();
+            while (list.Count > 0)
             {
-                int bytes = rand.Next(20);
-                if (!controller.CanTransmit(bytes)) continue;
-                bytesToTransmit -= bytes;
-                acc += bytes;
-                speedWatcher.AddBytes(bytes);
+                if (controller.CanTransmit(1))
+                {
+                    list.Dequeue();
+                    processed++;
+                }
+                else
+                {
+                    Thread.Sleep(10);
+                }
             }
-            stopWatch.Stop();
-            timer.Close();
-            var measuredTime = stopWatch.ElapsedMilliseconds;
-            const int expectedTime = 20*1000;
-            Debug.WriteLine(measuredTime);
-            Assert.IsTrue(Math.Abs(measuredTime - expectedTime) < (expectedTime*0.02));
+            timer.Stop();
+            sw.Stop();
+            var measuredTime = sw.ElapsedMilliseconds;
+            const int expectedTime = 10000;
+            Assert.IsTrue(Math.Abs(measuredTime - expectedTime) < (expectedTime * 0.1));
         }
-
-        //[Test]
-        //public void Allow_1KBs2()
-        //{
-        //    var controller = new BandwidthController();
-        //    var randomGenerator = new Random();
-        //    var mem = new MemoryStream();
-        //    var buff = new byte[1];
-
-        //    for(int i=0;;i++)
-        //    {
-        //        if(controller.CanPerform(1))
-        //        {
-        //            randomGenerator.NextBytes(buff);
-        //            mem.WriteByte(buff[0]);
-        //            if(i == 30) break;
-        //            controller.Update(1);
-        //        }
-        //        else
-        //        {
-        //            controller.Update(0);
-        //        }
-        //    }
-        //}
     }
 }

@@ -26,7 +26,7 @@ using Peer2Net.Utils;
 
 namespace Peer2Net.Progress
 {
-    public class BandwidthController
+    internal class BandwidthController : IBandwidthController
     {
         private readonly PidController _pidController;
         private int _setpoint;
@@ -50,7 +50,7 @@ namespace Peer2Net.Progress
             }
         }
 
-        internal bool CanTransmit(int bytesCount)
+        public bool CanTransmit(int bytesCount)
         {
             if (bytesCount > 0 && _accumulatedBytes < bytesCount) return false;
 
@@ -58,14 +58,13 @@ namespace Peer2Net.Progress
             return true;
         }
 
-        internal void Update(double measuredSpeed, TimeSpan deltaTime)
+        public void Update(double measuredSpeed, TimeSpan deltaTime)
         {
             var seconds = deltaTime.TotalMilliseconds / 1000.0;
-            var deltaSpeed = _setpoint - measuredSpeed;
+            var deltaSpeed = _setpoint - measuredSpeed/seconds;
 
             var correction = _pidController.Control(deltaSpeed, seconds);
-            _accumulatedBytes += (int)(/*measuredSpeed +*/ correction);
-//            _accumulatedBytes = _accumulatedBytes > 0 ? _accumulatedBytes : Int32.MaxValue;
+            _accumulatedBytes += (int)(_setpoint + correction);
         }
     }
 }
