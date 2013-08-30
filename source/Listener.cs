@@ -24,6 +24,7 @@
 using System;
 using System.Net;
 using System.Net.Sockets;
+using System.Text;
 using Peer2Net.EventArgs;
 using Peer2Net.Utils;
 
@@ -35,26 +36,24 @@ namespace Peer2Net
         Stopped
     }
 
-    public class Listener
+    public abstract class ListenerBase
     {
         private static readonly BlockingPool<SocketAsyncEventArgs> ConnectSaeaPool =
             new BlockingPool<SocketAsyncEventArgs>(() =>
-            {
-                var e = new SocketAsyncEventArgs();
-                return e;
-            });
+                {
+                    var e = new SocketAsyncEventArgs();
+                    return e;
+                });
 
-        private readonly IPEndPoint _endpoint;
-        private Socket _listener;
-        private int _port;
+        protected IPEndPoint EndPoint;
+        protected Socket Listener;
+        private readonly int _port;
         private ListenerStatus _status;
 
-        internal event EventHandler<NewConnectionEventArgs> ConnectionRequested;
-
-        public Listener(int port)
+        protected ListenerBase(int port)
         {
             _port = port;
-            _endpoint = new IPEndPoint(IPAddress.Any, port);
+            EndPoint = new IPEndPoint(IPAddress.Any, port);
             _status = ListenerStatus.Stopped;
         }
 
@@ -65,7 +64,7 @@ namespace Peer2Net
 
         public EndPoint Endpoint
         {
-            get { return _endpoint; }
+            get { return EndPoint; }
         }
 
         public int Port
@@ -77,67 +76,141 @@ namespace Peer2Net
         {
             try
             {
-                _listener = new Socket(_endpoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-                _listener.SetIPProtectionLevel(IPProtectionLevel.Unrestricted);
-                _listener.Bind(_endpoint);
-                _listener.Listen(4);
+                Listener = CreateSocket();
                 _status = ListenerStatus.Listening;
 
-                ListenForConnections();
+                Listen();
             }
             catch (SocketException)
             {
-                if (_listener == null) return;
+                if (Listener == null) return;
                 Stop();
                 throw;
             }
         }
 
-        private void ListenForConnections()
+        protected abstract Socket CreateSocket();
+        protected abstract void Notify(SocketAsyncEventArgs saea);
+        protected abstract bool ListenAsync(SocketAsyncEventArgs saea);
+
+        private void Listen()
         {
             var saea = ConnectSaeaPool.Take();
             saea.AcceptSocket = null;
-            saea.Completed += ConnectCompleted;
+            saea.Completed += IOCompleted;
             if(_status == ListenerStatus.Stopped) return;
 
-            var async = _listener.AcceptAsync(saea);
+            var async = ListenAsync(saea);
 
             if (!async)
             {
-                ConnectCompleted(null, saea);
+                IOCompleted(null, saea);
             }
         }
 
-        private void ConnectCompleted(object sender, SocketAsyncEventArgs saea)
+        private void IOCompleted(object sender, SocketAsyncEventArgs saea)
         {
             try
             {
                 if (saea.SocketError == SocketError.Success)
                 {
-                    RaiseConnectionRequestedEvent(new NewConnectionEventArgs(saea.AcceptSocket));
+                    Notify(saea);
                 }
             }
             finally
             {
-                saea.Completed -= ConnectCompleted;
+                saea.Completed -= IOCompleted;
                 ConnectSaeaPool.Add(saea);
-                if(_listener!=null) ListenForConnections();
+                if(Listener!=null) Listen();
             }
         }
 
         public void Stop()
         {
             _status = ListenerStatus.Stopped;
-            if (_listener != null)
+            if (Listener != null)
             {
-                _listener.Close();
-                _listener = null;
+                Listener.Close();
+                Listener = null;
             }
         }
+    }
 
-        private void RaiseConnectionRequestedEvent(NewConnectionEventArgs args)
+    public class Listener : ListenerBase
+    {
+        internal event EventHandler<NewConnectionEventArgs> ConnectionRequested;
+
+        public Listener(int port) : base(port)
         {
-            Events.RaiseAsync(ConnectionRequested, this, args);
+        }
+
+        protected override Socket CreateSocket()
+        {
+            var socket = new Socket(EndPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+            socket.SetIPProtectionLevel(IPProtectionLevel.Unrestricted);
+            socket.Bind(EndPoint);
+            socket.Listen(4);
+            return socket;
+        }
+
+        protected override bool ListenAsync(SocketAsyncEventArgs saea)
+        {
+            return Listener.AcceptAsync(saea);
+        }
+
+        protected override void Notify(SocketAsyncEventArgs saea)
+        {
+            Events.RaiseAsync(ConnectionRequested, this, new NewConnectionEventArgs(saea.AcceptSocket));
+        }
+    }
+
+    public class UdpListener : ListenerBase
+    {
+        public event EventHandler<NewDiscoveredNodeEventArgs> DiscoveredNode;
+        private readonly Guid _id = Guid.NewGuid();
+
+        public UdpListener(int port)
+            : base(port)
+        {
+        }
+
+        protected override Socket CreateSocket()
+        {
+            var socket = new Socket(EndPoint.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
+            socket.Bind(EndPoint);
+            return socket;
+        }
+
+        public void SayHello(int port)
+        {
+            var socket = new Socket(EndPoint.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
+            socket.EnableBroadcast = true;
+            var group = new IPEndPoint(IPAddress.Broadcast, Port);
+            var hi = Encoding.ASCII.GetBytes("Hi Peer2Net node here:" + _id + ":127.0.0.1:" + port);
+            socket.SendTo(hi, group);
+            socket.Close();             
+        }
+
+        protected override bool ListenAsync(SocketAsyncEventArgs saea)
+        {
+            var bufferSize = ("Hi Peer2Net node here:" + Guid.Empty + ":127.0.0.1:0000").Length;
+            saea.SetBuffer(new byte[bufferSize], 0, bufferSize);
+            saea.RemoteEndPoint = new IPEndPoint(IPAddress.Any, Port);
+            return Listener.ReceiveFromAsync(saea);
+        }
+
+        protected override void Notify(SocketAsyncEventArgs saea)
+        {
+            var message = Encoding.ASCII.GetString(saea.Buffer);
+            if(message.StartsWith("Hi Peer2Net node here"))
+            {
+                var parts = message.Split(':');
+                if(Guid.Parse(parts[1]) != _id)
+                {
+                    var endpoint = new IPEndPoint(IPAddress.Parse(parts[2]), int.Parse(parts[3]));
+                    Events.RaiseAsync(DiscoveredNode, this, new NewDiscoveredNodeEventArgs(endpoint));
+                }
+            }
         }
     }
 }

@@ -46,10 +46,12 @@
     <Compile Include="EventArgs\NewConnectionEventArgs.cs" />
     <Compile Include="IClientManager.cs" />
     <Compile Include="IConnection.cs" />
+    <Compile Include="LanDiscovery\UdpListener.cs" />
     <Compile Include="Peer.cs" />
     <Compile Include="ConnectionIOManager.cs" />
     <Compile Include="ConnectionStat.cs" />
     <Compile Include="EventArgs\PeerConnectedEventArgs.cs" />
+    <Compile Include="PeerHelloEventArgs.cs" />
     <Compile Include="Progress\IBandwidthController.cs" />
     <Compile Include="Progress\UnlimitedBandwidthController.cs" />
     <Compile Include="Progress\PerformanceCounters.cs" />

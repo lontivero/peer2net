@@ -90,10 +90,10 @@ namespace Peer2Net.Tests
             Assert.IsTrue(controller.CanTransmit(0), "Controller should allow transmit 0 bytes");
         }
 
-        [Test]
-        public void ShouldTakeAbout10Seconds()
+        [Test, Timeout(5000)]
+        public void ShouldTakeAbout3Seconds()
         {
-            var list = new Queue(Enumerable.Range(0, 9999).ToArray());
+            var list = new Queue(Enumerable.Range(1, 4000).ToArray());
             var controller = new BandwidthController { TargetSpeed = 1000 };
             var processed = 0;
             var timer = new System.Timers.Timer();
@@ -124,8 +124,8 @@ namespace Peer2Net.Tests
             timer.Stop();
             sw.Stop();
             var measuredTime = sw.ElapsedMilliseconds;
-            const int expectedTime = 10000;
-            Assert.IsTrue(Math.Abs(measuredTime - expectedTime) < (expectedTime * 0.1));
+            const int expectedTime = 4000;
+            Assert.IsTrue(Math.Abs(measuredTime - expectedTime) < (expectedTime * 0.3));
         }
     }
 }

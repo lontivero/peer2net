@@ -37,13 +37,13 @@ namespace Peer2Net.Chat
         private readonly CommunicationManager _comunicationManager;
         private readonly Listener _listener;
         private readonly Dictionary<IPEndPoint, Tuple<Peer, PascalMessageHandler>> _sessions;
+        private readonly UdpListener _discovery;
 
         public MainWindow()
         {
             InitializeComponent();
             var r = new Random();
             var port = r.Next(1500, 2000);
-            Title = "Chat on port " + port;
 
             _sessions = new Dictionary<IPEndPoint, Tuple<Peer, PascalMessageHandler>>();
             _listener = new Listener(port);
@@ -54,6 +54,11 @@ namespace Peer2Net.Chat
             _comunicationManager.PeerDataReceived += OnPeerDataReceived;
 
             _listener.Start();
+
+            _discovery = new UdpListener(3000);
+            _discovery.DiscoveredNode += (sender, args) => _comunicationManager.Connect(args.DiscoveredEndPoint);
+            _discovery.Start();
+            _discovery.SayHello(port);
         }
 
         private void OnPeerDataReceived(object sender, PeerDataEventArgs e)
@@ -102,25 +107,10 @@ namespace Peer2Net.Chat
             {
                 var text = textBoxEntryField.Text;
                 if(text == ":q") Application.Current.Shutdown();;
-                if(text.StartsWith(":"))
-                {
-                    ProcessCommand(text);
-                }
-                else
-                {
-                    Display("Me:");
-                    Display("  " + text);
-                    SendMessage(text);
-                }
+                Display("Me:");
+                Display("  " + text);
+                SendMessage(text);
                 textBoxEntryField.Clear();
-            }
-        }
-
-        public void ProcessCommand(string text)
-        {
-            if (text.StartsWith(":c"))
-            {
-                ConnectTo(text.Substring(2));
             }
         }
 
@@ -129,14 +119,6 @@ namespace Peer2Net.Chat
             var msg = GetBytes(message);
 
             _comunicationManager.Send(PascalMessageHandler.FormatMessage(msg), _sessions.Keys);
-        }
-
-        private void ConnectTo(string node)
-        {
-            var nodeParts = node.Split(':');
-            var ip = IPAddress.Parse(nodeParts[0]);
-            var port = int.Parse(nodeParts[1]);
-            _comunicationManager.Connect(new IPEndPoint(ip, port));
         }
 
         static byte[] GetBytes(string str)
