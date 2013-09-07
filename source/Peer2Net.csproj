@@ -10,7 +10,6 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Peer2Net</RootNamespace>
     <AssemblyName>Peer2Net</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -35,6 +34,7 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BufferManager\BuddyBufferAllocator.cs" />
@@ -46,12 +46,10 @@
     <Compile Include="EventArgs\NewConnectionEventArgs.cs" />
     <Compile Include="IClientManager.cs" />
     <Compile Include="IConnection.cs" />
-    <Compile Include="LanDiscovery\UdpListener.cs" />
     <Compile Include="Peer.cs" />
     <Compile Include="ConnectionIOManager.cs" />
     <Compile Include="ConnectionStat.cs" />
     <Compile Include="EventArgs\PeerConnectedEventArgs.cs" />
-    <Compile Include="PeerHelloEventArgs.cs" />
     <Compile Include="Progress\IBandwidthController.cs" />
     <Compile Include="Progress\UnlimitedBandwidthController.cs" />
     <Compile Include="Progress\PerformanceCounters.cs" />
@@ -79,9 +77,13 @@
     <Compile Include="MessageHandlers\PascalMessageHandler.cs" />
     <Compile Include="MessageHandlers\MessageReceivedEventArgs.cs" />
     <Compile Include="BufferManager\Buffer.cs" />
-    <Compile Include="Listener.cs" />
     <Compile Include="Workers\ScheduledAction.cs" />
     <Compile Include="Workers\TimedWorker.cs" />
+    <Compile Include="Listeners\ListenerBase.cs" />
+    <Compile Include="Listeners\UdpListener.cs" />
+    <Compile Include="Listeners\TcpListener.cs" />
+    <Compile Include="Discovery\IDiscover.cs" />
+    <Compile Include="UdpPacketReceived.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="ClassDiagram1.cd" />
@@ -94,4 +96,8 @@
   <Target Name="AfterBuild">
   </Target>
   -->
+  <ItemGroup>
+    <Folder Include="Listeners\" />
+    <Folder Include="Discovery\" />
+  </ItemGroup>
 </Project>

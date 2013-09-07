@@ -1,4 +1,4 @@
-﻿//
+//
 // - ComunicationManager.cs
 // 
 // Author:
@@ -39,7 +39,7 @@ namespace Peer2Net
     /// </summary>
     public class CommunicationManager
     {
-        private readonly Listener _listener;
+        private readonly TcpListener _listener;
         private readonly ClientWorker _worker;
         private readonly ConnectionIoActor _ioActor;
         private readonly ConcurrentDictionary<IPEndPoint, Peer> _peers;
@@ -68,7 +68,7 @@ namespace Peer2Net
         ///    listener.Start();
         /// </example>
         /// <param name="listener">The incomming connections <see cref="Listener"/>.</param>
-        public CommunicationManager(Listener listener)
+        public CommunicationManager(TcpListener listener)
         {
             _listener = listener;
             _worker = new ClientWorker();
