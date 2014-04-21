@@ -32,7 +32,7 @@ namespace Peer2Net.Tests
     public class PidControllerTests
     {
         [Test]
-        public void StopWhenPositiveError()
+        public void ItMustConvege()
         {
             var rand = new Random();
             var desired = 100 * rand.NextDouble();
@@ -50,20 +50,6 @@ namespace Peer2Net.Tests
             }
 
             Assert.IsTrue(Math.Abs(desired - measured) <= 1e-5);
-        }
-
-        [Test]
-        public void Test1()
-        {
-            var rand = new Random();
-            
-            var controller = new PidController(0.6, 0.4);
-            controller.Control(10, 1);
-            controller.Control(2, 1);
-            controller.Control(0.5, 1);
-            controller.Control(0.05, 1);
-            controller.Control(0.005, 1);
-
         }
     }
 }

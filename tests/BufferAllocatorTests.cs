@@ -29,12 +29,17 @@ namespace Peer2Net.Tests
     [TestFixture]
     public class BufferAllocatorTests
     {
+        private BufferAllocator CreateBufferManager()
+        {
+            return new BufferAllocator(new byte[256]);
+        }
 
         [Test]
         public void Test1 ()
         {
-            var memeory = new byte[256];
-            var bufferManager = new BufferAllocator(memeory);
+            // Step 1  [--------]
+            // Step 2  [xx------] alloc 64 -> 0..63 
+            var bufferManager = CreateBufferManager();
             var buffer = bufferManager.Allocate(64);
             Assert.AreEqual(0, buffer.Segment.Offset);
             Assert.AreEqual(64, buffer.Segment.Count);
@@ -43,8 +48,10 @@ namespace Peer2Net.Tests
         [Test]
         public void Test2()
         {
-            var memeory = new byte[256];
-            var bufferManager = new BufferAllocator(memeory);
+            // Step 1  [--------]
+            // Step 2  [xx------] alloc  64 ->   0.. 63 
+            // Step 3  [xx--xxxx] alloc 128 -> 128..255 
+            var bufferManager = CreateBufferManager();
             var buffer1 = bufferManager.Allocate(64);
             var buffer2 = bufferManager.Allocate(128);
             Assert.AreEqual(128, buffer2.Segment.Offset);
@@ -54,8 +61,11 @@ namespace Peer2Net.Tests
         [Test]
         public void Test3()
         {
-            var memeory = new byte[256];
-            var bufferManager = new BufferAllocator(memeory);
+            // Step 1  [--------]
+            // Step 2  [xx------] alloc  64 ->   0.. 63 * 
+            // Step 3  [--------] free buffer (step 2)
+            // Step 4  [xxxx----] alloc 128 ->   0..127
+            var bufferManager = CreateBufferManager();
             var buffer1 = bufferManager.Allocate(64);
             bufferManager.Free(buffer1);
 
@@ -67,13 +77,17 @@ namespace Peer2Net.Tests
         [Test]
         public void Test4()
         {
-            var memeory = new byte[256];
-            var bufferManager = new BufferAllocator(memeory);
+            // Step 1  [--------]
+            // Step 2  [xx------] alloc  64 ->   0.. 63
+            // Step 3  [xxx-----] alloc  32 ->  64.. 95 *
+            // Step 4  [xxxx----] alloc  32 ->  96..127
+            // Step 5  [xx-x----] free buffer (step 3)
+            // Step 6  [xxxx----] alloc  32 ->  64.. 95
+            var bufferManager = CreateBufferManager();
 
-            bufferManager.Allocate(32); //  0 - 31
-            bufferManager.Allocate(32); // 32 - 63
+            bufferManager.Allocate(64);
             Buffer buffer = bufferManager.Allocate(32);
-            bufferManager.Allocate(32); // 96 - 128
+            bufferManager.Allocate(32); 
 
             bufferManager.Free(buffer);
 
@@ -85,12 +99,11 @@ namespace Peer2Net.Tests
         [Test]
         public void Test5()
         {
-            var memeory = new byte[256];
-            var bufferManager = new BufferAllocator(memeory);
-
+            // Step 1  [--------]
+            // Step 2  [xxxxxxxx]
+            var bufferManager = CreateBufferManager();
             bufferManager.Allocate(256);
             Assert.IsNull(bufferManager.Allocate(1));
         }
-
     }
 }

@@ -27,7 +27,6 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using NUnit.Framework;
-using Peer2Net.BufferManager;
 using Peer2Net.Progress;
 
 namespace Peer2Net.Tests
@@ -42,7 +41,9 @@ namespace Peer2Net.Tests
             var controller = new BandwidthController {TargetSpeed = 1024};
             Assert.IsFalse(controller.CanTransmit(3453), "Controller should NOT allow more than target speed");
             Assert.IsTrue(controller.CanTransmit(512), "Controller should allow transmit 512");
+            controller.SetTransmittion(512);
             Assert.IsTrue(controller.CanTransmit(512), "Controller should allow transmit 512");
+            controller.SetTransmittion(512);
             Assert.IsFalse(controller.CanTransmit(512), "Controller should NOT allow transmit 512 after exceed the limit");
         }
 
@@ -50,6 +51,7 @@ namespace Peer2Net.Tests
         public void ControlAccumulatedBytes()
         {
             var controller = new BandwidthController {TargetSpeed = 1024};
+            controller.SetTransmittion(0);
             controller.Update(measuredSpeed: 0, deltaTime: TimeSpan.FromSeconds(1));
             Assert.IsTrue(controller.CanTransmit(2048), "Controller should allow transmit accumulated 2048 bytes");
         }
@@ -58,7 +60,8 @@ namespace Peer2Net.Tests
         public void ControlAccumulatedBytesAfterUpdate()
         {
             var controller = new BandwidthController { TargetSpeed = 1024 };
-            controller.Update(measuredSpeed: 1024, deltaTime: TimeSpan.FromSeconds(1));
+            controller.SetTransmittion(0);
+            controller.Update(measuredSpeed: 0, deltaTime: TimeSpan.FromSeconds(1));
             Assert.IsTrue(controller.CanTransmit(2048), "Controller should allow transmit 2048");
         }
 
@@ -66,32 +69,41 @@ namespace Peer2Net.Tests
         public void ControlTooSlow()
         {
             var controller = new BandwidthController { TargetSpeed = 1024 };
-            controller.CanTransmit(512);
+            controller.SetTransmittion(512);
             controller.Update(measuredSpeed: 512, deltaTime: TimeSpan.FromSeconds(1));
             Assert.IsFalse(controller.CanTransmit(2048), "Controller should NOT allow transmit more than 1024 bytes");
             Assert.IsTrue(controller.CanTransmit(1024), "Controller should allow transmit 1024");
-        }
-
-        public void ControlSmallTimeFrame()
-        {
-            var controller = new BandwidthController { TargetSpeed = 1024 };
-            controller.CanTransmit(512);
-            controller.Update(measuredSpeed: 1024, deltaTime: TimeSpan.FromSeconds(0.5));
-            Assert.IsFalse(controller.CanTransmit(513), "Controller should NOT allow transmit more than 512 bytes");
-            Assert.IsTrue(controller.CanTransmit(512), "Controller should allow transmit 512");
         }
 
         [Test]
         public void ControlTooFast()
         {
             var controller = new BandwidthController { TargetSpeed = 1024 };
+            controller.SetTransmittion(4 * 1024);
             controller.Update(measuredSpeed: 4 * 1024, deltaTime: TimeSpan.FromSeconds(1));
             Assert.IsFalse(controller.CanTransmit(1), "Controller should NOT allow transmit");
             Assert.IsTrue(controller.CanTransmit(0), "Controller should allow transmit 0 bytes");
         }
 
+        [Test]
+        public void ControlSmallTimeFrame()
+        {
+            var controller = new BandwidthController { TargetSpeed = 1024 };
+            controller.SetTransmittion(1024);
+            controller.Update(measuredSpeed: 1024, deltaTime: TimeSpan.FromSeconds(0.5));
+            Assert.IsFalse(controller.CanTransmit(1024), "Controller should NOT allow transmit ");
+        }
+
+        [Test]
+        public void ControlLongTimeFrame()
+        {
+            var controller = new BandwidthController { TargetSpeed = 1024 };
+            controller.Update(measuredSpeed: 1024, deltaTime: TimeSpan.FromSeconds(2));
+            Assert.IsTrue(controller.CanTransmit(1025), "Controller should allow transmit ");
+        }
+
         [Test, Timeout(5000)]
-        public void ShouldTakeAbout3Seconds()
+        public void ShouldTakeAbout4Seconds()
         {
             var list = new Queue(Enumerable.Range(1, 4000).ToArray());
             var controller = new BandwidthController { TargetSpeed = 1000 };
@@ -115,6 +127,7 @@ namespace Peer2Net.Tests
                 {
                     list.Dequeue();
                     processed++;
+                    controller.SetTransmittion(1);
                 }
                 else
                 {

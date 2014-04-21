@@ -123,7 +123,7 @@ namespace Peer2Net
                     return;
                 }
             }
-
+            state.BandwidthController.SetTransmittion(state.PendingBytes);
             state.Connection.Send(state.GetBufferForPending(), (sentCount, success) =>
                 {
                     try
@@ -170,7 +170,7 @@ namespace Peer2Net
                     return;
                 }
             }
-
+            state.BandwidthController.SetTransmittion(state.PendingBytes);
             state.Connection.Receive(state.GetBufferForPending(), (readCount, success) =>
                 {
                     try

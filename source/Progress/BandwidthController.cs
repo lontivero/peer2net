@@ -52,10 +52,12 @@ namespace Peer2Net.Progress
 
         public bool CanTransmit(int bytesCount)
         {
-            if (bytesCount > 0 && _accumulatedBytes < bytesCount) return false;
+            return bytesCount == 0 || (bytesCount > 0 && _accumulatedBytes >= bytesCount);
+        }
 
+        public void SetTransmittion(int bytesCount)
+        {
             _accumulatedBytes -= bytesCount;
-            return true;
         }
 
         public void Update(double measuredSpeed, TimeSpan deltaTime)

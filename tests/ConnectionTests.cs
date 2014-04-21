@@ -32,13 +32,13 @@ namespace Peer2Net.Tests
     [TestFixture]
     public class ConnectionTests
     {
-        private Listener _remote;
+        private TcpListener _remote;
         private ManualResetEvent _completion;
 
         [SetUp]
         public void Setup()
         {
-            _remote = new Listener(9999);
+            _remote = new TcpListener(9999);
             _remote.Start();
             _completion = new ManualResetEvent(false);
         }

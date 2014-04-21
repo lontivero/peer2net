@@ -34,14 +34,14 @@ namespace Peer2Net.Tests
         [Test]
         public void ShouldBeStoppedBeforeStart()
         {
-            var listener = new Listener(9991);
+            var listener = new TcpListener(9991);
             Assert.AreEqual(ListenerStatus.Stopped, listener.Status);
         }
 
         [Test]
         public void ShouldBeListeningAfterStart()
         {
-            var listener = new Listener(9992);
+            var listener = new TcpListener(9992);
             listener.Start();
             Assert.AreEqual(ListenerStatus.Listening, listener.Status);
         }
@@ -49,7 +49,7 @@ namespace Peer2Net.Tests
         [Test]
         public void ShouldBeStoppedAfterStop()
         {
-            var listener = new Listener(9993);
+            var listener = new TcpListener(9993);
             listener.Start();
             listener.Stop();
             Assert.AreEqual(ListenerStatus.Stopped, listener.Status);
@@ -58,7 +58,7 @@ namespace Peer2Net.Tests
         [Test]
         public void ShouldBeSilentAfterStopWhenStopped()
         {
-            var listener = new Listener(9994);
+            var listener = new TcpListener(9994);
             listener.Stop();
             Assert.AreEqual(ListenerStatus.Stopped, listener.Status);
         }
@@ -66,7 +66,7 @@ namespace Peer2Net.Tests
         [Test]
         public void ShouldAllowRestart()
         {
-            var listener = new Listener(9995);
+            var listener = new TcpListener(9995);
             listener.Start();
             listener.Stop();
             listener.Start();
@@ -78,7 +78,7 @@ namespace Peer2Net.Tests
         {
             var completion = new ManualResetEvent(false);
             var passed = false;
-            var listener = new Listener(9996);
+            var listener = new TcpListener(9996);
             listener.ConnectionRequested += (sender, args) => { passed = true; completion.Set(); };
             listener.Start();
 
@@ -87,13 +87,6 @@ namespace Peer2Net.Tests
             completion.WaitOne(500);
             
             Assert.IsTrue(passed);
-        }
-
-        [Test]
-        public void ShouldBeSilentAfterStopWhenStopped2()
-        {
-            var listener = new Listener(80);
-            Assert.Throws<SocketException>(listener.Start);
         }
     }
 }

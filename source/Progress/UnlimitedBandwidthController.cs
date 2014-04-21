@@ -32,6 +32,10 @@ namespace Peer2Net.Progress
             return true;
         }
 
+        public void SetTransmittion(int bytesCount)
+        {
+        }
+
         public void Update(double measuredSpeed, TimeSpan deltaTime)
         {
         }
