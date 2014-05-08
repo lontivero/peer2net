@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Generic;
 using System.Net;
+using System.Net.Sockets;
 using System.Text;
 using System.Windows;
 using System.Windows.Input;
@@ -35,18 +36,21 @@ namespace Peer2Net.Chat
     public partial class MainWindow : Window
     {
         private readonly CommunicationManager _comunicationManager;
-        private readonly Listener _listener;
+        private readonly TcpListener _listener;
         private readonly Dictionary<IPEndPoint, Tuple<Peer, PascalMessageHandler>> _sessions;
         private readonly UdpListener _discovery;
+        private readonly int _port;
+        private readonly Guid _id;
 
         public MainWindow()
         {
             InitializeComponent();
             var r = new Random();
-            var port = r.Next(1500, 2000);
+            _port = r.Next(1500, 2000);
+            _id = Guid.NewGuid();
 
             _sessions = new Dictionary<IPEndPoint, Tuple<Peer, PascalMessageHandler>>();
-            _listener = new Listener(port);
+            _listener = new TcpListener(_port);
             _comunicationManager = new CommunicationManager(_listener);
             _comunicationManager.ConnectionClosed += ChatOnMemberDisconnected;
             _comunicationManager.PeerConnected += ChatOnMemberConnected;
@@ -56,10 +60,32 @@ namespace Peer2Net.Chat
             _listener.Start();
 
             _discovery = new UdpListener(3000);
-            _discovery.DiscoveredNode += (sender, args) => _comunicationManager.Connect(args.DiscoveredEndPoint);
+            _discovery.UdpPacketReceived += DiscoveryOnUdpPacketReceived;
             _discovery.Start();
-            _discovery.SayHello(port);
+
+            using (var socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp))
+            {
+                socket.EnableBroadcast = true;
+                var group = new IPEndPoint(IPAddress.Broadcast, 3000);
+                var hi = Encoding.ASCII.GetBytes("Hi Peer2Net node here:" + _id + ":127.0.0.1:" + _port);
+                socket.SendTo(hi, group);
+                socket.Close();
+            }
         }
+
+        private void DiscoveryOnUdpPacketReceived(object sender, UdpPacketReceivedEventArgs args)
+        {
+            var msg = Encoding.ASCII.GetString(args.Data);
+            var msgArr = msg.Split(':');
+            var remoteId = Guid.Parse(msgArr[1]);
+            if(_id == remoteId) return;
+
+            var remoteIP = IPAddress.Parse(msgArr[2]);
+            var remoteHost = int.Parse(msgArr[3]);
+            var remoteEndpoint = new IPEndPoint(remoteIP, remoteHost);
+            _comunicationManager.Connect(remoteEndpoint);
+        }
+
 
         private void OnPeerDataReceived(object sender, PeerDataEventArgs e)
         {
