@@ -43,6 +43,8 @@ namespace Peer2Net.BufferManager
             var blocks = SizeToBlocks(size);
             var offset = _allocator.Allocate(blocks);
             if(offset == -1) return null;
+
+            //TODO
             PerformanceCounters.BufferMemoryUsed.IncrementBy(blocks*BlockSize);
             return new Buffer(new ArraySegment<byte>(_buffer, offset * BlockSize, size));
         }
@@ -51,6 +53,8 @@ namespace Peer2Net.BufferManager
         {
             var blocks = SizeToBlocks(buffer.Size);
             _allocator.Free(buffer.Segment.Offset / BlockSize);
+
+            //TODO
             PerformanceCounters.BufferMemoryUsed.IncrementBy(blocks * BlockSize);
         }
 
