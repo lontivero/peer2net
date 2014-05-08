@@ -1,18 +1,18 @@
-<?xml version="1.0"?>
-<package >
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
   <metadata>
-    <id>$id$</id>
+    <id>Peer2Net</id>
     <version>$version$</version>
-    <title>$title$</title>
-    <authors>$author$</authors>
-    <owners>$author$</owners>
-    <licenseUrl>http://LICENSE_URL_HERE_OR_DELETE_THIS_LINE</licenseUrl>
-    <projectUrl>http://PROJECT_URL_HERE_OR_DELETE_THIS_LINE</projectUrl>
-    <iconUrl>http://ICON_URL_HERE_OR_DELETE_THIS_LINE</iconUrl>
+    <authors>
+      Lucas Ontivero &lt;lucasontivero@gmail.com&gt;
+    </authors>
+    <licenseUrl>http://www.apache.org/licenses/LICENSE-2.0</licenseUrl>
+    <projectUrl>https://github.com/lontivero/peer2net</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
-    <description>$description$</description>
-    <releaseNotes>Summary of changes made in this release of the package.</releaseNotes>
-    <copyright>Copyright 2013</copyright>
-    <tags>Tag1 Tag2</tags>
+    <description>
+      Peer2Net is a lightweight and easy-to-use class library to develop peer-to-peer applications in .NET and Mono.
+    </description>
+    <copyright>Please see LICENSE for more details.</copyright>
+    <tags>p2p peer network tcp distributed socket</tags>
   </metadata>
 </package>
