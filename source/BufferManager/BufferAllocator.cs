@@ -45,7 +45,7 @@ namespace Peer2Net.BufferManager
             if(offset == -1) return null;
 
             //TODO
-            PerformanceCounters.BufferMemoryUsed.IncrementBy(blocks*BlockSize);
+            //PerformanceCounters.BufferMemoryUsed.IncrementBy(blocks*BlockSize);
             return new Buffer(new ArraySegment<byte>(_buffer, offset * BlockSize, size));
         }
 
@@ -55,7 +55,7 @@ namespace Peer2Net.BufferManager
             _allocator.Free(buffer.Segment.Offset / BlockSize);
 
             //TODO
-            PerformanceCounters.BufferMemoryUsed.IncrementBy(blocks * BlockSize);
+            //PerformanceCounters.BufferMemoryUsed.IncrementBy(blocks * BlockSize);
         }
 
         private static int SizeToBlocks(int size)
