@@ -1,3 +1,7 @@
+[![Build status](https://ci.appveyor.com/api/projects/status/fxs3hmfgjsslguas)](https://ci.appveyor.com/project/lontivero/peer2net)
+
+[![NuGet version](https://badge.fury.io/nu/peer2net.png)](http://badge.fury.io/nu/peer2net)
+
 Peer2Net
 ======
 
