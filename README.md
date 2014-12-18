@@ -1,7 +1,7 @@
-Peer2Net
-======
+Open.P2P
+========
 
-Peer2Net is a lightweight and easy-to-use class library to develop peer-to-peer applications in .NET and Mono. 
+Open.P2P is a lightweight and easy-to-use class library to develop peer-to-peer applications in .NET and Mono. 
 Programming with sockets, and using tcp as communication protocol in particular, introduces some complexites which can be abstracted away.
 
 
@@ -18,8 +18,20 @@ A simple Echo service that once received a message, sends it back.
 var listener = new Listener(9988);
 var comManager = new CommunicationManager(_listener);
 
-comManager.PeerDataReceived += (s, e)=>  comManager.Send(e.Peer.EndPoint, e.Data);
-
+comManager.PeerConnected += (s, e)=> {
+    using(var sr = new StreamReader(e.Peer.Stream))
+	{
+		using(var sw = new StreamWriter(e.Peer.Stream))
+		{
+			var read = sr.Read(buf, 0, buf.Length)
+			while(read > 0)
+			{
+				sw.Write(buf, 0, read);
+				read = sr.Read(buf, 0, buf.Length);
+			}
+		}
+	}
+};
 listener.Start();
 ```
 

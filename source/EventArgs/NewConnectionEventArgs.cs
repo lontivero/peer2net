@@ -1,6 +1,6 @@
 using System.Net.Sockets;
 
-namespace Peer2Net.EventArgs
+namespace Open.P2P.EventArgs
 {
     internal class NewConnectionEventArgs : System.EventArgs
     {

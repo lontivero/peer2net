@@ -22,71 +22,63 @@
 // <summary></summary>
 
 using System;
+using System.IO;
 using System.Net;
-using Peer2Net.BufferManager;
-using Peer2Net.Progress;
+using Open.P2P.BufferManager;
+using Open.P2P.IO;
+using Open.P2P.Progress;
+using Open.P2P.Streams;
 
-namespace Peer2Net
+namespace Open.P2P
 {
     public class Peer
     {
-        private readonly IConnection _connection;
-        private readonly PeerStat _statistics;
-        private readonly IBandwidthController _receiveBandwidthController;
-        private readonly IBandwidthController _sendBandwidthController;
-        private readonly SpeedWatcher _sendSpeedWatcher;
-        private readonly SpeedWatcher _receiveSpeedWatcher;
-        private readonly Uri _uri;
+        internal IConnection Connection { get; private set; }
 
-        internal IConnection Connection
-        {
-            get { return _connection; }
-        }
+        internal IBandwidthController ReceiveBandwidthController { get; private set; }
+        internal IBandwidthController SendBandwidthController { get; private set; }
 
-        public Uri Uri
-        {
-            get { return _uri; }
-        }
+        public Uri Uri { get; private set; }
+        public PeerStat Statistics { get; private set; }
+
+        public SpeedWatcher SendSpeedWatcher { get; private set; }
+        public SpeedWatcher ReceiveSpeedWatcher { get; private set; }
+
+        public Stream Stream { get; private set; }
 
         public IPEndPoint EndPoint
         {
-            get { return _connection.Endpoint; }
+            get { return Connection.Endpoint; }
         }
 
-        public PeerStat Statistics
+        public long UploadSpeed
         {
-            get { return _statistics; }
+            set; 
+            get;
         }
 
-        internal IBandwidthController ReceiveBandwidthController
+        public long DownloadSpeed
         {
-            get { return _receiveBandwidthController; }
+            set;
+            get;
         }
 
-        internal IBandwidthController SendBandwidthController
+        internal Peer(Stream stream, IConnection connection)
         {
-            get { return _sendBandwidthController; }
+            Connection = connection;
+            SendSpeedWatcher = new SpeedWatcher();
+            ReceiveSpeedWatcher = new SpeedWatcher();
+            SendBandwidthController = new UnlimitedBandwidthController();
+            ReceiveBandwidthController = new UnlimitedBandwidthController();
+            Statistics = new PeerStat();
+            Stream = new ThrottledStream(stream, ReceiveBandwidthController, SendBandwidthController);
+
+            Uri = new Uri("tcp://" + EndPoint.Address + ':' + EndPoint.Port);
         }
 
-        public SpeedWatcher SendSpeedWatcher
+        internal void Disconnect()
         {
-            get { return _sendSpeedWatcher; }
-        }
-
-        public SpeedWatcher ReceiveSpeedWatcher
-        {
-            get { return _receiveSpeedWatcher; }
-        }
-
-        internal Peer(IConnection connection)
-        {
-            _connection = connection;
-            _sendSpeedWatcher = new SpeedWatcher();
-            _receiveSpeedWatcher = new SpeedWatcher();
-            _receiveBandwidthController = new UnlimitedBandwidthController();
-            _sendBandwidthController = new UnlimitedBandwidthController();
-            _statistics = new PeerStat();
-            _uri = new Uri("tcp://" + EndPoint.Address + ':' + EndPoint.Port);
+            Stream.Close();
         }
     }
 }

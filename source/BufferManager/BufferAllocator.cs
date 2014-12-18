@@ -22,11 +22,10 @@
 // <summary></summary>
 
 using System;
-using Peer2Net.Progress;
 
-namespace Peer2Net.BufferManager
+namespace Open.P2P.BufferManager
 {
-    internal class BufferAllocator : IBufferAllocator
+    public class BufferAllocator : IBufferAllocator
     {
         private const int BlockSize = 1 << 5; // 32 bytes block size 
         private readonly BuddyBufferAllocator _allocator;
@@ -38,21 +37,21 @@ namespace Peer2Net.BufferManager
             _allocator = BuddyBufferAllocator.Create(SizeToBlocks(buffer.Length));
         }
 
-        public Buffer Allocate(int size)
+        public ArraySegment<byte> Allocate(int size)
         {
             var blocks = SizeToBlocks(size);
             var offset = _allocator.Allocate(blocks);
-            if(offset == -1) return null;
+            if (offset == -1) return new ArraySegment<byte>();
 
             //TODO
             //PerformanceCounters.BufferMemoryUsed.IncrementBy(blocks*BlockSize);
-            return new Buffer(new ArraySegment<byte>(_buffer, offset * BlockSize, size));
+            return new ArraySegment<byte>(_buffer, offset * BlockSize, size);
         }
 
-        public void Free(Buffer buffer)
+        public void Free(ArraySegment<byte> buffer)
         {
-            var blocks = SizeToBlocks(buffer.Size);
-            _allocator.Free(buffer.Segment.Offset / BlockSize);
+            var blocks = SizeToBlocks(buffer.Count);
+            _allocator.Free(buffer.Offset / BlockSize);
 
             //TODO
             //PerformanceCounters.BufferMemoryUsed.IncrementBy(blocks * BlockSize);
@@ -63,10 +62,10 @@ namespace Peer2Net.BufferManager
             return (int) Math.Ceiling((decimal) size/BlockSize);
         }
 
-        public Buffer AllocateAndCopy(byte[] data)
+        public ArraySegment<byte> AllocateAndCopy(byte[] data)
         {
             var buffer = Allocate(data.Length);
-            System.Buffer.BlockCopy(data, 0, buffer.Segment.Array, buffer.Segment.Offset, data.Length);
+            Buffer.BlockCopy(data, 0, buffer.Array, buffer.Offset, data.Length);
             return buffer;
         }
     }

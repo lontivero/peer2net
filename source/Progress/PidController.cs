@@ -21,7 +21,7 @@
 
 // <summary></summary>
 
-namespace Peer2Net.Progress
+namespace Open.P2P.Progress
 {
     internal class PidController
     {

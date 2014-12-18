@@ -1,4 +1,4 @@
-namespace Peer2Net.EventArgs
+namespace Open.P2P.EventArgs
 {
     public class PeerEventArgs : System.EventArgs
     {

@@ -23,7 +23,7 @@
 
 using System.Windows;
 
-namespace Peer2Net.Chat
+namespace Open.P2P.ChatExample
 {
     /// <summary>
     /// Interaction logic for App.xaml

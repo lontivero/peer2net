@@ -8,9 +8,11 @@
     <ProjectGuid>{4F5330BB-6BE3-48A2-903D-A492BE05B2AB}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Peer2Net</RootNamespace>
-    <AssemblyName>Peer2Net</AssemblyName>
+    <RootNamespace>Open.P2P</RootNamespace>
+    <AssemblyName>Open.P2P</AssemblyName>
     <FileAlignment>512</FileAlignment>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -22,6 +24,7 @@
     <WarningLevel>4</WarningLevel>
     <RunCodeAnalysis>true</RunCodeAnalysis>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -30,34 +33,32 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Xml" />
-    <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BufferManager\BuddyBufferAllocator.cs" />
     <Compile Include="BufferManager\BufferAllocator.cs" />
-    <Compile Include="ClientManager.cs" />
-    <Compile Include="CommunicationManager.cs" />
-    <Compile Include="Connection.cs" />
-    <Compile Include="ConnectState.cs" />
+    <Compile Include="IO\CommunicationManager.cs" />
+    <Compile Include="IO\Connection.cs" />
     <Compile Include="EventArgs\NewConnectionEventArgs.cs" />
-    <Compile Include="IClientManager.cs" />
-    <Compile Include="IConnection.cs" />
+    <Compile Include="IO\IConnection.cs" />
     <Compile Include="Peer.cs" />
-    <Compile Include="ConnectionIOManager.cs" />
-    <Compile Include="ConnectionStat.cs" />
+    <Compile Include="IO\ConnectionStat.cs" />
     <Compile Include="EventArgs\PeerConnectedEventArgs.cs" />
+    <Compile Include="Streams\PeerStream.cs" />
     <Compile Include="Progress\IBandwidthController.cs" />
     <Compile Include="Progress\UnlimitedBandwidthController.cs" />
     <Compile Include="Progress\PerformanceCounters.cs" />
     <Compile Include="Progress\PidController.cs" />
     <Compile Include="Progress\BandwidthController.cs" />
     <Compile Include="BufferManager\SpeedWatcher.cs" />
-    <Compile Include="MessageHandlers\EotMessageHandler.cs" />
+    <Compile Include="Streams\Readers\EotStreamReader.cs" />
+    <Compile Include="IO\SocketAwaitable.cs" />
+    <Compile Include="Streams\ThrottledStream.cs" />
+    <Compile Include="Streams\Writers\PeerStreamWriter.cs" />
     <Compile Include="Utils\BlockingPool.cs" />
     <Compile Include="Utils\Guard.cs" />
     <Compile Include="Utils\TimeExtensions.cs" />
@@ -65,29 +66,18 @@
     <Compile Include="Workers\BlockingQueue.cs" />
     <Compile Include="Workers\ClientWorker.cs" />
     <Compile Include="EventArgs\ConnectionEventArgs.cs" />
-    <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="Workers\IWorker.cs" />
-    <Compile Include="Workers\PauseToken.cs" />
-    <Compile Include="Workers\PauseTokenSource.cs" />
-    <Compile Include="MessageHandlers\IProtocol.cs" />
-    <Compile Include="IOState.cs" />
     <Compile Include="Utils\Events.cs" />
     <Compile Include="BufferManager\IBufferAllocator.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="MessageHandlers\IStreamHandler.cs" />
-    <Compile Include="MessageHandlers\PascalMessageHandler.cs" />
-    <Compile Include="MessageHandlers\MessageReceivedEventArgs.cs" />
-    <Compile Include="BufferManager\Buffer.cs" />
+    <Compile Include="Streams\Readers\PeerStreamReader.cs" />
+    <Compile Include="Streams\Readers\PascalStreamReader.cs" />
     <Compile Include="Workers\ScheduledAction.cs" />
     <Compile Include="Workers\TimedWorker.cs" />
     <Compile Include="Listeners\ListenerBase.cs" />
     <Compile Include="Listeners\UdpListener.cs" />
     <Compile Include="Listeners\TcpListener.cs" />
-    <Compile Include="Discovery\IDiscover.cs" />
-    <Compile Include="UdpPacketReceived.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="ClassDiagram1.cd" />
+    <Compile Include="EventArgs\UdpPacketReceivedEventArgs.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -1,6 +1,6 @@
 ﻿using System.Net;
 
-namespace Peer2Net
+namespace Open.P2P.EventArgs
 {
     public class UdpPacketReceivedEventArgs : System.EventArgs
     {

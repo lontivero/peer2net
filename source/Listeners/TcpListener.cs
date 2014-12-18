@@ -22,13 +22,11 @@
 // <summary></summary>
 
 using System;
-using System.Net;
 using System.Net.Sockets;
-using System.Text;
-using Peer2Net.EventArgs;
-using Peer2Net.Utils;
+using Open.P2P.EventArgs;
+using Open.P2P.Utils;
 
-namespace Peer2Net
+namespace Open.P2P.Listeners
 {
 
     public class TcpListener : ListenerBase
@@ -55,7 +53,7 @@ namespace Peer2Net
 
         protected override void Notify(SocketAsyncEventArgs saea)
         {
-            Events.RaiseAsync(ConnectionRequested, this, new NewConnectionEventArgs(saea.AcceptSocket));
+            Events.Raise(ConnectionRequested, this, new NewConnectionEventArgs(saea.AcceptSocket));
         }
     }
 }

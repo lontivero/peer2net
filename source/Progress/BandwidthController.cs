@@ -22,21 +22,25 @@
 // <summary></summary>
 
 using System;
-using Peer2Net.Utils;
+using System.Threading;
+using System.Threading.Tasks;
+using Open.P2P.Utils;
 
-namespace Peer2Net.Progress
+namespace Open.P2P.Progress
 {
     internal class BandwidthController : IBandwidthController
     {
         private readonly PidController _pidController;
         private int _setpoint;
-        private int _accumulatedBytes;
+        private DateTime _lastTime;
+        private double _lastSpeed;
 
         internal BandwidthController()
         {
             _pidController = new PidController();
             _setpoint = Int32.MaxValue;
-            _accumulatedBytes = Int32.MaxValue;
+            _lastTime = DateTime.UtcNow;
+            _lastSpeed = 0;
         }
 
         public int TargetSpeed
@@ -46,27 +50,32 @@ namespace Peer2Net.Progress
             {
                 Guard.IsBeetwen(value, 0, int.MaxValue, "value");
                 _setpoint = value;
-                _accumulatedBytes = _setpoint;
             }
         }
 
-        public bool CanTransmit(int bytesCount)
+        public Task WaitToTransmit(int bytesCount)
         {
-            return bytesCount == 0 || (bytesCount > 0 && _accumulatedBytes >= bytesCount);
+            var t1 = DateTime.UtcNow;
+            var t0 = _lastTime;
+            var dt = (t1 - t0).TotalSeconds;
+            dt = Math.Abs(dt - 0) < 0.0001 ? 0.0001 : dt; 
+
+            var v1 = TargetSpeed;
+            var v0 = _lastSpeed;
+            var dv = (v1 - v0)/dt;
+
+            var vn = _pidController.Control(dv, dt);
+            var v2 = v1 + vn;
+
+            var wait = (bytesCount / v2) * 1000;
+            return Task.Delay((int)wait);
         }
 
-        public void SetTransmittion(int bytesCount)
+        public void UpdateSpeed(int bytes, TimeSpan deltaTime)
         {
-            _accumulatedBytes -= bytesCount;
-        }
 
-        public void Update(double measuredSpeed, TimeSpan deltaTime)
-        {
-            var seconds = deltaTime.TotalMilliseconds / 1000.0;
-            var deltaSpeed = _setpoint - measuredSpeed/seconds;
-
-            var correction = _pidController.Control(deltaSpeed, seconds);
-            _accumulatedBytes += (int)(_setpoint + correction);
+            _lastSpeed = bytes / deltaTime.TotalSeconds;
+            _lastTime = DateTime.UtcNow;
         }
     }
 }

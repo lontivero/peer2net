@@ -21,26 +21,25 @@
 
 // <summary></summary>
 
+using System;
 using System.Net;
-using System.Net.Sockets;
 using System.Threading;
 using NUnit.Framework;
-using Peer2Net.BufferManager;
+using Open.P2P.IO;
+using TcpListener = Open.P2P.Listeners.TcpListener;
 
-namespace Peer2Net.Tests
+namespace Open.P2P.Tests
 {
     [TestFixture]
     public class ConnectionTests
     {
         private TcpListener _remote;
-        private ManualResetEvent _completion;
 
         [SetUp]
         public void Setup()
         {
             _remote = new TcpListener(9999);
             _remote.Start();
-            _completion = new ManualResetEvent(false);
         }
 
         [TearDown]
@@ -50,31 +49,26 @@ namespace Peer2Net.Tests
         }
 
         [Test]
-        public void ShouldConnectToListener()
+        public async void ShouldConnectToListener()
         {
-            var connected = false;
             var connection = new Connection(new IPEndPoint(IPAddress.Loopback, 9999));
-            connection.Connect((success) => { connected = success; _completion.Set(); });
-            _completion.WaitOne();
+            await connection.ConnectAsync();
 
-            Assert.IsTrue(connected);
+            Assert.IsTrue(connection.IsConnected);
         }
 
         [Test]
-        public void ShouldNotConnectToWrongPort()
+        public async void ShouldNotConnectToWrongPort()
         {
-            var connected = true;
             var connection = new Connection(new IPEndPoint(IPAddress.Loopback, 7777));
-            connection.Connect((success) => { connected = success; _completion.Set(); });
-            _completion.WaitOne();
+            await connection.ConnectAsync();
 
-            Assert.IsFalse(connected);
+            Assert.IsFalse(connection.IsConnected);
         }
 
         [Test]
-        public void ShouldSendData()
+        public async void ShouldSendData()
         {
-            var localConnectionWaiter = new ManualResetEvent(false);
             var remoteConnectionWaiter = new ManualResetEvent(false);
 
             Connection remoteConnection = null;
@@ -84,18 +78,14 @@ namespace Peer2Net.Tests
             };
 
             var localConnection = new Connection(new IPEndPoint(IPAddress.Loopback, 9999));
-            localConnection.Connect(c => localConnectionWaiter.Set());
-            WaitHandle.WaitAll(new WaitHandle[] { localConnectionWaiter, remoteConnectionWaiter });
-            localConnectionWaiter.Reset();
-            remoteConnectionWaiter.Reset();
+            await localConnection.ConnectAsync();
+            remoteConnectionWaiter.WaitOne();
 
-            var remoteBuffer = new Buffer(new byte[1]);
-            remoteConnection.Receive(remoteBuffer, (i, b) => remoteConnectionWaiter.Set());
-            localConnection.Send(new Buffer(new byte[] { 0xf1 }), (i, b) => localConnectionWaiter.Set());
-            WaitHandle.WaitAll(new WaitHandle[] { localConnectionWaiter, remoteConnectionWaiter });
+            var remoteBuffer = new ArraySegment<byte>(new byte[1]);
+            await localConnection.SendAsync(new ArraySegment<byte>(new byte[] { 0xf1 }));
+            await remoteConnection.ReceiveAsync(remoteBuffer);
 
-            Assert.AreEqual(0xf1, remoteBuffer.Segment.Array[0]); 
+            Assert.AreEqual(0xf1, remoteBuffer.Array[0]); 
         }
-
     }
 }

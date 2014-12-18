@@ -23,7 +23,7 @@
 
 using System.Net;
 
-namespace Peer2Net.EventArgs
+namespace Open.P2P.EventArgs
 {
     public class ConnectionEventArgs : System.EventArgs
     {

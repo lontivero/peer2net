@@ -23,7 +23,7 @@
 
 using System;
 
-namespace Peer2Net.BufferManager
+namespace Open.P2P.BufferManager
 {
     public class SpeedWatcher
     {

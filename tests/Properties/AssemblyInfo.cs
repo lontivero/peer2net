@@ -28,7 +28,7 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("P2PNet.Tests")]
+[assembly: AssemblyTitle("Open.P2P.Tests")]
 [assembly: AssemblyDescription("Unit tests suite for p2p .net class library")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCopyright("Copyright © Lucas Eugenio Ontivero 2013")]

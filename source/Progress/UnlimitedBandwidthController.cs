@@ -22,21 +22,18 @@
 // <summary></summary>
 
 using System;
+using System.Threading.Tasks;
 
-namespace Peer2Net.Progress
+namespace Open.P2P.Progress
 {
     public class UnlimitedBandwidthController : IBandwidthController
     {
-        public bool CanTransmit(int bytesCount)
+        public Task WaitToTransmit(int bytesCount)
         {
-            return true;
+            return Task.Delay(0);
         }
 
-        public void SetTransmittion(int bytesCount)
-        {
-        }
-
-        public void Update(double measuredSpeed, TimeSpan deltaTime)
+        public void UpdateSpeed(int speed, TimeSpan deltaTime)
         {
         }
     }

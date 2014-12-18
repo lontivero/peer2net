@@ -28,16 +28,19 @@ using System.Net.Sockets;
 using System.Text;
 using System.Windows;
 using System.Windows.Input;
-using Peer2Net.EventArgs;
-using Peer2Net.MessageHandlers;
+using Open.P2P.EventArgs;
+using Open.P2P.IO;
+using Open.P2P.Listeners;
+using Open.P2P.Streams.Readers;
+using TcpListener = Open.P2P.Listeners.TcpListener;
 
-namespace Peer2Net.Chat
+namespace Open.P2P.ChatExample
 {
     public partial class MainWindow : Window
     {
         private readonly CommunicationManager _comunicationManager;
         private readonly TcpListener _listener;
-        private readonly Dictionary<IPEndPoint, Tuple<Peer, PascalMessageHandler>> _sessions;
+        private readonly Dictionary<IPEndPoint, Tuple<Peer, PascalStreamReader>> _sessions;
         private readonly UdpListener _discovery;
         private readonly int _port;
         private readonly Guid _id;
@@ -49,13 +52,11 @@ namespace Peer2Net.Chat
             _port = r.Next(1500, 2000);
             _id = Guid.NewGuid();
 
-            _sessions = new Dictionary<IPEndPoint, Tuple<Peer, PascalMessageHandler>>();
+            _sessions = new Dictionary<IPEndPoint, Tuple<Peer, PascalStreamReader>>();
             _listener = new TcpListener(_port);
             _comunicationManager = new CommunicationManager(_listener);
             _comunicationManager.ConnectionClosed += ChatOnMemberDisconnected;
             _comunicationManager.PeerConnected += ChatOnMemberConnected;
-            _comunicationManager.ConnectionFailed += ChatOnMemberConnectionFailure;
-            _comunicationManager.PeerDataReceived += OnPeerDataReceived;
 
             _listener.Start();
 
@@ -73,7 +74,7 @@ namespace Peer2Net.Chat
             }
         }
 
-        private void DiscoveryOnUdpPacketReceived(object sender, UdpPacketReceivedEventArgs args)
+        private async void DiscoveryOnUdpPacketReceived(object sender, UdpPacketReceivedEventArgs args)
         {
             var msg = Encoding.ASCII.GetString(args.Data);
             var msgArr = msg.Split(':');
@@ -83,43 +84,27 @@ namespace Peer2Net.Chat
             var remoteIP = IPAddress.Parse(msgArr[2]);
             var remoteHost = int.Parse(msgArr[3]);
             var remoteEndpoint = new IPEndPoint(remoteIP, remoteHost);
-            _comunicationManager.Connect(remoteEndpoint);
+            await _comunicationManager.ConnectAsync(remoteEndpoint);
         }
 
-
-        private void OnPeerDataReceived(object sender, PeerDataEventArgs e)
-        {
-            var session = _sessions[e.Peer.EndPoint];
-            var messageHandler = session.Item2;
-            messageHandler.ProcessIncomingData(e.Data);
-            _comunicationManager.Receive(messageHandler.PendingBytes, e.Peer.EndPoint);
-        }
-
-        private void ChatOnMemberConnectionFailure(object sender, ConnectionEventArgs e)
-        {
-            Display(e.EndPoint + " not found");
-        }
 
         private void ChatOnMemberDisconnected(object sender, ConnectionEventArgs e)
         {
             Display(e.EndPoint + " left the room");
         }
 
-        private void ChatOnMemberConnected(object sender, PeerEventArgs e)
+        private async void ChatOnMemberConnected(object sender, PeerEventArgs e)
         {
-            var messageHandler = new PascalMessageHandler();
-            messageHandler.MessageReceived += (o, ea) => NotifyMessageReceived(e.Peer, ea);
-
-            _sessions.Add(e.Peer.EndPoint, new Tuple<Peer, PascalMessageHandler>(e.Peer, messageHandler));
-            _comunicationManager.Receive(4, e.Peer.EndPoint);
-
+            var sr = new PascalStreamReader(e.Peer.Stream);
+            _sessions.Add(e.Peer.EndPoint, new Tuple<Peer, PascalStreamReader>(e.Peer, sr));
             Display(e.Peer.EndPoint + " has joined");
-        }
-
-        private void NotifyMessageReceived(Peer peer, MessageReceivedEventArgs e)
-        {
-            Display(peer.EndPoint + " say:");
-            Display("  " + GetString(e.Data));
+            byte[] bytes;
+            while (true)
+            {
+                bytes = await sr.ReadBytesAsync();
+                Display(e.Peer.EndPoint + " say:");
+                Display("  " + GetString(bytes));
+            }
         }
 
         private void Display(string str)
@@ -140,11 +125,11 @@ namespace Peer2Net.Chat
             }
         }
 
-        public void SendMessage(string message)
+        public async void SendMessage(string message)
         {
             var msg = GetBytes(message);
-
-            _comunicationManager.Send(PascalMessageHandler.FormatMessage(msg), _sessions.Keys);
+            var buf = PascalStreamReader.FormatMessage(msg);
+            await _comunicationManager.SendAsync(buf, 0, buf.Length, _sessions.Keys);
         }
 
         static byte[] GetBytes(string str)

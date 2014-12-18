@@ -22,9 +22,9 @@
 // <summary></summary>
 
 using NUnit.Framework;
-using Peer2Net.BufferManager;
+using Open.P2P.BufferManager;
 
-namespace Peer2Net.Tests
+namespace Open.P2P.Tests
 {
     [TestFixture]
     public class BufferAllocatorTests
@@ -41,8 +41,8 @@ namespace Peer2Net.Tests
             // Step 2  [xx------] alloc 64 -> 0..63 
             var bufferManager = CreateBufferManager();
             var buffer = bufferManager.Allocate(64);
-            Assert.AreEqual(0, buffer.Segment.Offset);
-            Assert.AreEqual(64, buffer.Segment.Count);
+            Assert.AreEqual(0, buffer.Offset);
+            Assert.AreEqual(64, buffer.Count);
         }
 
         [Test]
@@ -54,8 +54,8 @@ namespace Peer2Net.Tests
             var bufferManager = CreateBufferManager();
             var buffer1 = bufferManager.Allocate(64);
             var buffer2 = bufferManager.Allocate(128);
-            Assert.AreEqual(128, buffer2.Segment.Offset);
-            Assert.AreEqual(128, buffer2.Segment.Count);
+            Assert.AreEqual(128, buffer2.Offset);
+            Assert.AreEqual(128, buffer2.Count);
         }
 
         [Test]
@@ -70,8 +70,8 @@ namespace Peer2Net.Tests
             bufferManager.Free(buffer1);
 
             var buffer2 = bufferManager.Allocate(128);
-            Assert.AreEqual(0, buffer2.Segment.Offset);
-            Assert.AreEqual(128, buffer2.Segment.Count);
+            Assert.AreEqual(0, buffer2.Offset);
+            Assert.AreEqual(128, buffer2.Count);
         }
 
         [Test]
@@ -86,14 +86,14 @@ namespace Peer2Net.Tests
             var bufferManager = CreateBufferManager();
 
             bufferManager.Allocate(64);
-            Buffer buffer = bufferManager.Allocate(32);
+            var buffer = bufferManager.Allocate(32);
             bufferManager.Allocate(32); 
 
             bufferManager.Free(buffer);
 
             buffer = bufferManager.Allocate(32); // 64 - 95
-            Assert.AreEqual(64, buffer.Segment.Offset);
-            Assert.AreEqual(32, buffer.Segment.Count);
+            Assert.AreEqual(64, buffer.Offset);
+            Assert.AreEqual(32, buffer.Count);
         }
 
         [Test]

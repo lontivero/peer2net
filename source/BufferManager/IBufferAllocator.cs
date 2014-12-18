@@ -21,11 +21,13 @@
 
 // <summary></summary>
 
-namespace Peer2Net.BufferManager
+using System;
+
+namespace Open.P2P.BufferManager
 {
-    interface IBufferAllocator
+    public interface IBufferAllocator
     {
-        Buffer Allocate(int size);
-        void Free(Buffer segments);
+        ArraySegment<byte> Allocate(int size);
+        void Free(ArraySegment<byte> segments);
     }
 }

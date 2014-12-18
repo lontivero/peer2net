@@ -26,12 +26,11 @@ using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
-using Peer2Net.BufferManager;
-using Peer2Net.Progress;
-using Peer2Net.Workers;
-using Buffer = Peer2Net.BufferManager.Buffer;
+using Open.P2P.BufferManager;
+using Open.P2P.IO;
+using Open.P2P.Workers;
 
-namespace Peer2Net.Tests
+namespace Open.P2P.Tests
 {
     class TestWorkScheduler : IWorkScheduler
     {
@@ -50,34 +49,43 @@ namespace Peer2Net.Tests
                 QueueOneTimeAction(action, interval);
         }
     }
+
     class TestBufferAllocator : IBufferAllocator
     {
-        public Func<int, Buffer> AllocateFunc; 
-        public Buffer Allocate(int size)
+        public Func<int, ArraySegment<byte>> AllocateFunc; 
+        public ArraySegment<byte> Allocate(int size)
         {
-            return AllocateFunc!=null ? AllocateFunc(size) : null;
+            return AllocateFunc!=null ? AllocateFunc(size) : new ArraySegment<byte>();
         }
 
-        public void Free(Buffer segments)
+        public void Free(ArraySegment<byte> segments)
         {
         }
     }
+
     class TestConnection: IConnection
     {
-        public Action<Buffer, ConnectionIoCallback> ReceiveAction;
+        public Func<ArraySegment<byte>, Task<int>> ReceiveAction;
 
         public IPEndPoint Endpoint { get; private set; }
         public bool IsConnected { get; private set; }
-        public void Receive(Buffer buffer, ConnectionIoCallback callback)
+
+        public async Task<int> ReceiveAsync(ArraySegment<byte> buffer)
         {
-            if(ReceiveAction!=null) ReceiveAction(buffer, callback);
+            if (ReceiveAction != null) return await ReceiveAction(buffer);
+            return 0;
         }
-        public void Send(Buffer buffer, ConnectionIoCallback callback)
+
+        public Task<int> SendAsync(ArraySegment<byte> buffer)
         {
+            return new Task<int>(() => 0);
         }
-        public void Connect(ConnectionConnectCallback callback)
+
+        public Task ConnectAsync()
         {
+            return new Task<int>(() => 0);
         }
+
         public void Close()
         {
         }
@@ -93,14 +101,9 @@ namespace Peer2Net.Tests
         {
             var connected = false;
             var connectWaiter = new ManualResetEvent(false);
-            var worker = new TestWorkScheduler();
-            var io = new ConnectionIoActor(worker, _dummyBufferAllocator);
             var endpoint = new IPEndPoint(IPAddress.Loopback, 9999);
-            Action<IConnection, bool> callback = (connection, success) =>{
-                connected = success;
-                connectWaiter.Set();
-            };
-            io.Connect(new Connection(endpoint), c => callback(c, true), c => callback(c, false));
+
+            //io.Connect(new Connection(endpoint), c => callback(c, true), c => callback(c, false));
             connectWaiter.WaitOne();
             Assert.IsFalse(connected);
         }
@@ -120,7 +123,7 @@ namespace Peer2Net.Tests
                 }
             };
 
-            var io = new ConnectionIoActor(worker, _dummyBufferAllocator);
+            //var io = new ConnectionIoActor(worker);
             var endpoint = new IPEndPoint(IPAddress.Parse("217.87.23.53"), 9999);
             Action<IConnection, bool> callback = (connection, success) =>
             {
@@ -128,7 +131,7 @@ namespace Peer2Net.Tests
                 connectWaiter.Set();
             };
 
-            io.Connect(new Connection(endpoint), c => callback(c, true), c => callback(c, false));
+            //io.Connect(new Connection(endpoint), c => callback(c, true), c => callback(c, false));
             connectWaiter.WaitOne();
             Assert.IsFalse(connected);
             Assert.IsTrue(timeout);
@@ -150,15 +153,16 @@ namespace Peer2Net.Tests
             };
             var bufferAllocator = new TestBufferAllocator();
             var connection = new TestConnection();
-            var io = new ConnectionIoActor(worker, bufferAllocator);
+            //var io = new ConnectionIoActor(worker);
 
-            bufferAllocator.AllocateFunc= i => null;
-            connection.ReceiveAction = (buffer, callback) => {
+            bufferAllocator.AllocateFunc= i => new ArraySegment<byte>();
+            connection.ReceiveAction = (buffer) => {
                 receiveCalled = true;
                 receiveWaiter.Set();
+                return new Task<int>(()=>19);
             };
-            io.Receive(128, connection, new BandwidthController(), null, null );
-            bufferAllocator.AllocateFunc = i => new Buffer(new byte[128]);
+            //io.Receive(new byte[128], connection, new BandwidthController(), null, null );
+            bufferAllocator.AllocateFunc = i => new ArraySegment<byte>(new byte[128]);
             receiveWaiter.WaitOne(100);
 
             Assert.IsTrue(receiveCalled, "Receive was not called.");

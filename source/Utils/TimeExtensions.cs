@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Peer2Net.Utils
+namespace Open.P2P.Utils
 {
     static class TimeExtensions
     {

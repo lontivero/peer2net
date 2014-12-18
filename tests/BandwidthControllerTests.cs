@@ -22,123 +22,31 @@
 // <summary></summary>
 
 using System;
-using System.Collections;
 using System.Diagnostics;
-using System.Linq;
-using System.Threading;
+using System.Threading.Tasks;
 using NUnit.Framework;
-using Peer2Net.Progress;
+using Open.P2P.Progress;
 
-namespace Peer2Net.Tests
+namespace Open.P2P.Tests
 {
     [TestFixture]
     public class BandwidthControllerTests
     {
-
         [Test]
-        public void ControlBeforeUpdate()
+        public async Task ControlBeforeUpdate()
         {
             var controller = new BandwidthController {TargetSpeed = 1024};
-            Assert.IsFalse(controller.CanTransmit(3453), "Controller should NOT allow more than target speed");
-            Assert.IsTrue(controller.CanTransmit(512), "Controller should allow transmit 512");
-            controller.SetTransmittion(512);
-            Assert.IsTrue(controller.CanTransmit(512), "Controller should allow transmit 512");
-            controller.SetTransmittion(512);
-            Assert.IsFalse(controller.CanTransmit(512), "Controller should NOT allow transmit 512 after exceed the limit");
-        }
-
-        [Test]
-        public void ControlAccumulatedBytes()
-        {
-            var controller = new BandwidthController {TargetSpeed = 1024};
-            controller.SetTransmittion(0);
-            controller.Update(measuredSpeed: 0, deltaTime: TimeSpan.FromSeconds(1));
-            Assert.IsTrue(controller.CanTransmit(2048), "Controller should allow transmit accumulated 2048 bytes");
-        }
-
-        [Test]
-        public void ControlAccumulatedBytesAfterUpdate()
-        {
-            var controller = new BandwidthController { TargetSpeed = 1024 };
-            controller.SetTransmittion(0);
-            controller.Update(measuredSpeed: 0, deltaTime: TimeSpan.FromSeconds(1));
-            Assert.IsTrue(controller.CanTransmit(2048), "Controller should allow transmit 2048");
-        }
-
-        [Test]
-        public void ControlTooSlow()
-        {
-            var controller = new BandwidthController { TargetSpeed = 1024 };
-            controller.SetTransmittion(512);
-            controller.Update(measuredSpeed: 512, deltaTime: TimeSpan.FromSeconds(1));
-            Assert.IsFalse(controller.CanTransmit(2048), "Controller should NOT allow transmit more than 1024 bytes");
-            Assert.IsTrue(controller.CanTransmit(1024), "Controller should allow transmit 1024");
-        }
-
-        [Test]
-        public void ControlTooFast()
-        {
-            var controller = new BandwidthController { TargetSpeed = 1024 };
-            controller.SetTransmittion(4 * 1024);
-            controller.Update(measuredSpeed: 4 * 1024, deltaTime: TimeSpan.FromSeconds(1));
-            Assert.IsFalse(controller.CanTransmit(1), "Controller should NOT allow transmit");
-            Assert.IsTrue(controller.CanTransmit(0), "Controller should allow transmit 0 bytes");
-        }
-
-        [Test]
-        public void ControlSmallTimeFrame()
-        {
-            var controller = new BandwidthController { TargetSpeed = 1024 };
-            controller.SetTransmittion(1024);
-            controller.Update(measuredSpeed: 1024, deltaTime: TimeSpan.FromSeconds(0.5));
-            Assert.IsFalse(controller.CanTransmit(1024), "Controller should NOT allow transmit ");
-        }
-
-        [Test]
-        public void ControlLongTimeFrame()
-        {
-            var controller = new BandwidthController { TargetSpeed = 1024 };
-            controller.Update(measuredSpeed: 1024, deltaTime: TimeSpan.FromSeconds(2));
-            Assert.IsTrue(controller.CanTransmit(1025), "Controller should allow transmit ");
-        }
-
-        [Test, Timeout(5000)]
-        public void ShouldTakeAbout4Seconds()
-        {
-            var list = new Queue(Enumerable.Range(1, 4000).ToArray());
-            var controller = new BandwidthController { TargetSpeed = 1000 };
-            var processed = 0;
-            var timer = new System.Timers.Timer();
-            timer.Elapsed += (sender, args) =>
-            {
-                lock (controller)
-                {
-                    controller.Update(processed, TimeSpan.FromMilliseconds(250));
-                    processed = 0;
-                }
-            };
-            timer.Interval = 250;
-            var sw = new Stopwatch();
-            timer.Start();
-            sw.Start();
-            while (list.Count > 0)
-            {
-                if (controller.CanTransmit(1))
-                {
-                    list.Dequeue();
-                    processed++;
-                    controller.SetTransmittion(1);
-                }
-                else
-                {
-                    Thread.Sleep(10);
-                }
-            }
-            timer.Stop();
-            sw.Stop();
-            var measuredTime = sw.ElapsedMilliseconds;
-            const int expectedTime = 4000;
-            Assert.IsTrue(Math.Abs(measuredTime - expectedTime) < (expectedTime * 0.3));
+            var w = new Stopwatch();
+            w.Start();
+            await controller.WaitToTransmit(1024);
+            controller.UpdateSpeed(1024, TimeSpan.FromSeconds(1));
+            await controller.WaitToTransmit(1024);
+            controller.UpdateSpeed(1024, TimeSpan.FromSeconds(1));
+            await controller.WaitToTransmit(1024);
+            controller.UpdateSpeed(1024, TimeSpan.FromSeconds(1));
+            await controller.WaitToTransmit(1024);
+            w.Stop();
+            Assert.AreEqual(3, w.Elapsed.TotalSeconds, 0.4);
         }
     }
 }

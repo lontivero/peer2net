@@ -30,7 +30,7 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 
-[assembly: AssemblyTitle("Peer2Net")]
+[assembly: AssemblyTitle("Open.P2P")]
 [assembly: AssemblyDescription("Peer-to-Peer .Net class library")]
 [assembly: AssemblyCopyright("Copyright © Lucas Eugenio Ontivero 2013")]
 
@@ -60,4 +60,4 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyFileVersion("1.0.0.0")]
 [assembly: CLSCompliant(true)]
 
-[assembly: InternalsVisibleTo("Peer2Net.Tests") ]
+[assembly: InternalsVisibleTo("Open.P2P.Tests") ]

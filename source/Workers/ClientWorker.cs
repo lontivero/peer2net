@@ -23,7 +23,7 @@
 
 using System;
 
-namespace Peer2Net.Workers
+namespace Open.P2P.Workers
 {
     class ClientWorker : IWorker, IWorkScheduler
     {

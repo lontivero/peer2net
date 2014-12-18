@@ -25,8 +25,10 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using NUnit.Framework;
+using Open.P2P.Listeners;
+using TcpListener = Open.P2P.Listeners.TcpListener;
 
-namespace Peer2Net.Tests
+namespace Open.P2P.Tests
 {
     [TestFixture]
     public class ListenerTests

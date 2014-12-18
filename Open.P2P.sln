@@ -1,6 +1,6 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 11.00
-# Visual Studio 2010
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{C00D70DB-1297-48F1-8708-26E0AFBE773E}"
 	ProjectSection(SolutionItems) = preProject
 		.nuget\NuGet.Config = .nuget\NuGet.Config
@@ -14,11 +14,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Documents", "Documents", "{
 		README.md = README.md
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Peer2Net", "source\Peer2Net.csproj", "{4F5330BB-6BE3-48A2-903D-A492BE05B2AB}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Open.P2P", "source\Open.P2P.csproj", "{4F5330BB-6BE3-48A2-903D-A492BE05B2AB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Peer2Net.Tests", "tests\Peer2Net.Tests.csproj", "{A037A1D0-CB30-45AA-81BB-660109BDA90D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Open.P2P.Tests", "tests\Open.P2P.Tests.csproj", "{A037A1D0-CB30-45AA-81BB-660109BDA90D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Peer2Net.Chat", "chat\Peer2Net.Chat.csproj", "{99B8106B-8107-4C08-A067-0F1CB52A5FAB}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Open.P2P.ChatExample", "chat\Open.P2P.ChatExample.csproj", "{99B8106B-8107-4C08-A067-0F1CB52A5FAB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -21,14 +21,11 @@
 
 // <summary></summary>
 
-using System;
 using System.Net;
 using System.Net.Sockets;
-using System.Text;
-using Peer2Net.EventArgs;
-using Peer2Net.Utils;
+using Open.P2P.Utils;
 
-namespace Peer2Net
+namespace Open.P2P.Listeners
 {
     public enum ListenerStatus
     {

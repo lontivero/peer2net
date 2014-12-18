@@ -24,11 +24,10 @@
 using System;
 using System.Net;
 using System.Net.Sockets;
-using System.Text;
-using Peer2Net.EventArgs;
-using Peer2Net.Utils;
+using Open.P2P.EventArgs;
+using Open.P2P.Utils;
 
-namespace Peer2Net
+namespace Open.P2P.Listeners
 {
     public class UdpListener : ListenerBase
     {
@@ -38,7 +37,7 @@ namespace Peer2Net
         public event EventHandler<UdpPacketReceivedEventArgs> UdpPacketReceived;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="Peer2Net.UdpListener"/> class.
+        /// Initializes a new instance of the <see cref="UdpListener"/> class.
         /// </summary>
         /// <param name='port'>
         /// Port.
@@ -66,7 +65,7 @@ namespace Peer2Net
         protected override void Notify(SocketAsyncEventArgs saea)
         {
 			var endPoint = saea.RemoteEndPoint as IPEndPoint;
-            Events.RaiseAsync(UdpPacketReceived, this, new UdpPacketReceivedEventArgs(endPoint, saea.Buffer));
+            Events.Raise(UdpPacketReceived, this, new UdpPacketReceivedEventArgs(endPoint, saea.Buffer));
         }
     }
 }

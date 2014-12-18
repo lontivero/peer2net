@@ -1,5 +1,5 @@
 //
-// - PacketReceivedEventArgs.cs
+// - RawPacketHandler.cs
 // 
 // Author:
 //     Lucas Ontivero <lucasontivero@gmail.com>
@@ -21,20 +21,29 @@
 
 // <summary></summary>
 
-namespace Peer2Net.MessageHandlers
-{
-    public class MessageReceivedEventArgs : System.EventArgs
-    {
-        private readonly byte[] _data;
+using System.Collections.Generic;
+using System.IO;
+using System.Threading.Tasks;
+using Open.P2P.BufferManager;
 
-        public MessageReceivedEventArgs(byte[] data)
+namespace Open.P2P.Streams.Readers
+{
+    public class EotStreamReader : PeerStreamReader
+    {
+        public EotStreamReader(Stream stream, BufferAllocator bufferAllocator) 
+            : base(stream, bufferAllocator)
         {
-            _data = data;
         }
 
-        public byte[] Data
+        public override async Task<byte[]> ReadBytesAsync()
         {
-            get { return _data; }
+            var packet = new List<byte>();
+            byte b;
+            while((b = await ReadByteAsync()) > 0)
+            {
+                packet.Add(b);
+            }
+            return packet.ToArray();
         }
     }
 }

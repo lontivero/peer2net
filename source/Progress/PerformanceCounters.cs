@@ -24,7 +24,7 @@
 using System;
 using System.Diagnostics;
 
-namespace Peer2Net.Progress
+namespace Open.P2P.Progress
 {
     class PerformanceCounters
     {

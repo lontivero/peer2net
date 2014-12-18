@@ -23,13 +23,11 @@
 
 using System;
 
-namespace Peer2Net
+namespace Open.P2P.IO
 {
     public class PeerStat
     {
-        private long _receivedByteCount;
         private readonly DateTime _connectionDate;
-        private long _sentByteCount;
 
         public PeerStat()
         {
@@ -41,24 +39,20 @@ namespace Peer2Net
             get{ return 1000.0 / (DateTime.UtcNow - _connectionDate).TotalMilliseconds; }
         }
 
-        public long ReceivedByteCount
-        {
-            get { return _receivedByteCount; }
-        }
+        public long ReceivedByteCount { get; private set; }
+        public long SentByteCount { get; private set; }
 
-        public long SentByteCount
-        {
-            get { return _sentByteCount; }
-        }
+        public DateTime LastTimeSent { get; private set; }
+        public DateTime LastTimeReceived { get; private set; }
 
         public long AverageReceiveSpeed
         {
-            get { return (long) (_receivedByteCount/SecondsSinceConnected); }
+            get { return (long) (ReceivedByteCount/SecondsSinceConnected); }
         }
 
         public long AverageSendSpeed
         {
-            get { return (long)(_sentByteCount / SecondsSinceConnected); }
+            get { return (long)(SentByteCount / SecondsSinceConnected); }
         }
 
         public DateTime ConnectionDate
@@ -73,12 +67,14 @@ namespace Peer2Net
 
         internal void AddReceivedBytes(int byteCount)
         {
-            _receivedByteCount = ReceivedByteCount + byteCount;
+            ReceivedByteCount = ReceivedByteCount + byteCount;
+            LastTimeReceived = DateTime.UtcNow;
         }
 
         internal void AddSentBytes(int byteCount)
         {
-            _sentByteCount = ReceivedByteCount + byteCount;
+            SentByteCount = ReceivedByteCount + byteCount;
+            LastTimeSent = DateTime.UtcNow;
         }
     }
 }

@@ -24,7 +24,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Peer2Net.BufferManager
+namespace Open.P2P.BufferManager
 {
     internal class BuddyBufferAllocator
     {

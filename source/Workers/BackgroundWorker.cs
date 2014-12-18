@@ -25,7 +25,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Peer2Net.Workers
+namespace Open.P2P.Workers
 {
     internal class BackgroundWorker : IWorker
     {

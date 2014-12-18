@@ -1,11 +1,11 @@
 using System;
+using System.Threading.Tasks;
 
-namespace Peer2Net.Progress
+namespace Open.P2P.Progress
 {
     internal interface IBandwidthController
     {
-        bool CanTransmit(int bytesCount);
-        void SetTransmittion(int bytesCount);
-        void Update(double measuredSpeed, TimeSpan deltaTime);
+        Task WaitToTransmit(int bytesCount);
+        void UpdateSpeed(int speed, TimeSpan deltaTime);
     }
 }

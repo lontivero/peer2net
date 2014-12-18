@@ -1,4 +1,4 @@
-﻿<Application x:Class="Peer2Net.Chat.App"
+﻿<Application x:Class="Open.P2P.ChatExample.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              StartupUri="ChatWindow.xaml">
