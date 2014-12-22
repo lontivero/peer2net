@@ -1,5 +1,8 @@
 Open.P2P
 ========
+[![Build status](https://ci.appveyor.com/api/projects/status/fxs3hmfgjsslguas)](https://ci.appveyor.com/project/lontivero/peer2net)
+
+[![NuGet version](https://badge.fury.io/nu/peer2net.png)](http://badge.fury.io/nu/peer2net)
 
 Open.P2P is a lightweight and easy-to-use class library to develop peer-to-peer applications in .NET and Mono. 
 Programming with sockets, and using tcp as communication protocol in particular, introduces some complexites which can be abstracted away.
@@ -54,6 +57,6 @@ deal with pinned memory.
 
 Development
 -----------
-Peer2Net is developed by [Lucas Ontivero](http://geeks.ms/blogs/lontivero) ([@lontivero](http://twitter.com/lontivero)). You are welcome to contribute code. You can send code both as a patch or a GitHub pull request.
+Open.P2P is developed by [Lucas Ontivero](http://geeks.ms/blogs/lontivero) ([@lontivero](http://twitter.com/lontivero)). You are welcome to contribute code. You can send code both as a patch or a GitHub pull request.
 
 Note that Peer2Net is still very much work in progress. 
